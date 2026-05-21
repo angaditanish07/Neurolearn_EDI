@@ -83,6 +83,12 @@ SESSION_COOKIE_SECURE=1
 
 **Still 502 after port fix:** open **Logs** (runtime, not build) for `Killed`, `MemoryError`, or MongoDB errors — free tier may run out of RAM loading TensorFlow.
 
+**`SSL handshake failed` / `TLSV1_ALERT_INTERNAL_ERROR` from Atlas:**
+
+1. **Atlas → Network Access → Add IP Address → Allow access from anywhere** (`0.0.0.0/0`). Render uses changing IPs; without this, Atlas often fails with SSL errors.
+2. Confirm `MONGODB_URI` uses `mongodb+srv://...` and password `@` is encoded as `%40`.
+3. Redeploy after the app update (`certifi` + CA certs in Docker).
+
 ---
 
 ## Option C — Oracle Cloud free VM (best for full ML, $0)

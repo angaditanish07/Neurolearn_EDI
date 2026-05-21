@@ -2,6 +2,7 @@ flask==2.3.3
 werkzeug==2.3.7
 flask-socketio==5.1.1
 pymongo==4.6.3
+certifi>=2024.2.2
 simple-websocket==1.0.0
 python-socketio==5.10.0
 python-engineio==4.8.0
