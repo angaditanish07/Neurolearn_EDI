@@ -82,13 +82,7 @@
             });
         }
 
-        if (readBtn) {
-            readBtn.addEventListener('click', () => {
-                if (window.NeuroLearnA11y) {
-                    NeuroLearnA11y.readMainContent();
-                }
-            });
-        }
+        /* readAloudBtn wired once in accessibility.js to avoid double speech */
     }
 
     document.addEventListener('DOMContentLoaded', () => {

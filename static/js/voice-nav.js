@@ -87,7 +87,11 @@ class VoiceNav {
             return;
         }
         if (command.includes('read aloud') || command === 'read') {
-            if (window.NeuroLearnA11y) NeuroLearnA11y.readMainContent();
+            if (window.readPageAloud) {
+                readPageAloud();
+            } else if (window.NeuroLearnA11y) {
+                NeuroLearnA11y.readPageAloud();
+            }
             return;
         }
 

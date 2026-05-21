@@ -52,12 +52,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Accessibility Classes */
-.dyslexic-font {
-    font-family: 'OpenDyslexic', 'Lexend', sans-serif !important;
-    letter-spacing: 0.05em;
-    word-spacing: 0.1em;
-}
+/* Dyslexic font — loaded via static/css/dyslexic-font.css (body.dyslexic-font) */
 
 .high-contrast {
     --background-light: #000000;
@@ -567,7 +562,8 @@ h3 { font-size: 1.25rem; }
 .voice-controls {
     position: fixed;
     bottom: 2rem;
-    right: 2rem;
+    left: 2rem;
+    right: auto;
     display: flex;
     gap: 1rem;
     z-index: 1000;
@@ -664,8 +660,13 @@ const state = {
 };
 
 function toggleDyslexicFont() {
+    if (window.NeuroLearnA11y) {
+        window.NeuroLearnA11y.toggleDyslexicFont();
+        state.isDyslexicFont = window.NeuroLearnA11y.state.dyslexicFont;
+        return;
+    }
     state.isDyslexicFont = !state.isDyslexicFont;
-    document.body.classList.toggle('dyslexic-font');
+    document.body.classList.toggle('dyslexic-font', state.isDyslexicFont);
     announceChange(`Dyslexic friendly font ${state.isDyslexicFont ? 'enabled' : 'disabled'}`);
 }
 
@@ -703,6 +704,10 @@ function startLearningPath(pathType) {
     };
     announceChange(pathMessages[pathType]);
     updateUI();
+}
+
+function openEducationalGames() {
+    window.location.href = '/interactive_learning?games=1';
 }
 
 function addMessageToChat(sender, message) {
@@ -841,9 +846,20 @@ function hideFaceModal() {
     document.getElementById('face-modal').style.display = 'none';
 }
 function readSection(sectionId) {
+    if (window.readSection) {
+        window.readSection(sectionId);
+        return;
+    }
     const section = document.getElementById(sectionId);
-    if (section) {
-        speakText(section.innerText);
+    if (section && window.NeuroLearnA11y) {
+        NeuroLearnA11y.readElement(section);
+    }
+}
+
+function readPathCard(btn) {
+    const card = btn && btn.closest ? btn.closest('.path-card') : null;
+    if (card && window.NeuroLearnA11y) {
+        NeuroLearnA11y.readElement(card);
     }
 }
 async function markChallengeDone() {
@@ -1103,37 +1119,7 @@ function scrollToSection(sectionId) {
     }
 }
 
-// Add floating controls for voice features
-document.body.insertAdjacentHTML('beforeend', `
-    <div class="voice-controls" style="
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        display: flex;
-        gap: 10px;
-        z-index: 1000;
-    ">
-        <button class="voice-nav-btn" onclick="voiceNav.start()" style="
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: none;
-            background: var(--primary-gradient);
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        ">
-            🎤
-        </button>
-        <button id="readAloudBtn" class="voice-btn" title="Read Aloud">
-            &#x1F50A;
-        </button>
-    </div>
-`);
+/* Mic/speaker buttons: global controls in includes/nav_scripts.html (bottom-left) */
 
 // Add styles for active states
 document.head.insertAdjacentHTML('beforeend', `
@@ -1217,6 +1203,7 @@ function goToInteractiveLearning() {
             <h2><span class="icon">🎯</span> Your Learning Paths</h2>
             <div class="paths-grid">
                 <div class="path-card" onclick="startLearningPath('visual')">
+                    <button type="button" class="btn btn-purple path-read-btn" style="float:right;padding:0.25rem 0.5rem;font-size:0.85rem;" onclick="event.stopPropagation(); readPathCard(this);" title="Read this card">🔊</button>
                     <a href="/interactive_learning">
                     <h3>Start Interactive Learning</h3>
                     <p>Learn through images, diagrams, and visual stories 🎨</p></a>
@@ -1225,15 +1212,17 @@ function goToInteractiveLearning() {
                     </div>
                 </div>
                 <div class="path-card" onclick="window.location.href='/dyslexia_screening'">
+                    <button type="button" class="btn btn-purple path-read-btn" style="float:right;padding:0.25rem 0.5rem;font-size:0.85rem;" onclick="event.stopPropagation(); readPathCard(this);" title="Read this card">🔊</button>
                     <h3>Dyslexia Screening Test</h3>
                     <p>Take the test to assess reading abilities 📝</p>
                     <div class="progress-bar">
                         <div class="progress" style="width: 45%"></div>
                     </div>
                 </div>
-                <div class="path-card" onclick="startLearningPath('interactive')">
+                <div class="path-card" onclick="openEducationalGames()">
+                    <button type="button" class="btn btn-purple path-read-btn" style="float:right;padding:0.25rem 0.5rem;font-size:0.85rem;" onclick="event.stopPropagation(); readPathCard(this);" title="Read this card">🔊</button>
                     <h3>Interactive Games</h3>
-                    <p>Learn through fun and engaging activities 🎮</p>
+                    <p>Word scramble, math challenge, memory match &amp; more 🎮</p>
                     <div class="progress-bar">
                         <div class="progress" style="width: 30%"></div>
                     </div>
@@ -1321,11 +1310,11 @@ function goToInteractiveLearning() {
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     {% include 'includes/nav_scripts.html' %}
     <div class="status-indicator"></div>
-  
+
     <!-- Botpress Chat Widget -->
     <script src="https://cdn.botpress.cloud/webchat/v2.5/inject.js"></script>
     <script src="https://files.bpcontent.cloud/2025/05/08/18/20250508183514-V30W3VFU.js"></script>
-    
+
     <script>
     // Voice Feature Implementation
     class VoiceFeatures {
@@ -1372,7 +1361,7 @@ function goToInteractiveLearning() {
 
         setupButtons() {
             $('#voiceNavBtn').on('click', () => this.toggleVoiceRecognition());
-            $('#readAloudBtn').on('click', () => this.readCurrentSection());
+            /* readAloudBtn handled by accessibility.js (single handler, safe voice) */
             $('#chatBtn').on('click', () => {
                 window.botpressWebChat.sendEvent({ type: 'show' });
             });
@@ -1438,39 +1427,24 @@ function goToInteractiveLearning() {
         }
 
         readCurrentSection() {
+            if (window.NeuroLearnA11y) {
+                NeuroLearnA11y.readPageAloud();
+                return;
+            }
             if (this.isReading) {
                 this.stopReading();
                 return;
             }
-
             const currentSection = this.getCurrentSection();
             if (currentSection) {
                 const text = currentSection.textContent.replace(/\s+/g, ' ').trim();
-                
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 1;
-                utterance.pitch = 1;
-                utterance.volume = 1;
-
-                utterance.onstart = () => {
-                    this.isReading = true;
-                    $('#readAloudBtn').addClass('active');
-                    this.showStatus('Reading...');
-                };
-
                 utterance.onend = () => {
                     this.isReading = false;
                     $('#readAloudBtn').removeClass('active');
-                    this.hideStatus();
                 };
-
-                utterance.onerror = (event) => {
-                    console.error('Speech synthesis error:', event);
-                    this.isReading = false;
-                    $('#readAloudBtn').removeClass('active');
-                    this.showStatus('Error reading text');
-                };
-
+                this.isReading = true;
+                $('#readAloudBtn').addClass('active');
                 this.synthesis.speak(utterance);
             }
         }

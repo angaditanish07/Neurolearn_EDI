@@ -9,6 +9,30 @@ Press Ctrl+C to stop.
 import os
 import sys
 
+
+def _relaunch_with_venv_if_needed():
+    """Use project venv when system Python lacks dependencies."""
+    root = os.path.dirname(os.path.abspath(__file__))
+    if sys.platform == 'win32':
+        venv_py = os.path.join(root, 'venv', 'Scripts', 'python.exe')
+    else:
+        venv_py = os.path.join(root, 'venv', 'bin', 'python')
+    if not os.path.isfile(venv_py):
+        return
+    if os.path.normcase(os.path.realpath(sys.executable)) == os.path.normcase(
+        os.path.realpath(venv_py)
+    ):
+        return
+    try:
+        import flask  # noqa: F401
+    except ImportError:
+        import subprocess
+        print('Using venv Python (system Python is missing dependencies)...')
+        raise SystemExit(subprocess.call([venv_py, *sys.argv]))
+
+
+_relaunch_with_venv_if_needed()
+
 # Load .env before any app imports
 try:
     from dotenv import load_dotenv

@@ -64,6 +64,30 @@ Redis is optional (`REDIS_URL` can stay empty in `.env` for cookie sessions).
 | Port error (10013 / in use) | Change `PORT=8080` in `.env`, or stop the old server: `Stop-Process -Id (Get-NetTCPConnection -LocalPort 5001).OwningProcess -Force` |
 | Docker pipe error | Start Docker Desktop, or skip Docker and use `run.py` |
 | Missing models | Keep `fer2013_mini_XCEPTION.102-0.66.hdf5` and `dyslexia_model.joblib` in project root |
+| **Reading / audio not working** | See **Audio & ffmpeg** below |
+
+### Audio & ffmpeg
+
+**Dyslexia screening (read aloud)** sends audio to the server for speech-to-text. The app converts recordings to **WAV in the browser** when possible (no ffmpeg needed). If that fails, the server needs **ffmpeg** to decode WebM/MP4.
+
+**Check:** open http://localhost:8080/healthz — `"ffmpeg": true` means server-side fallback is available.
+
+**Install ffmpeg on Windows (recommended):**
+
+1. Download a build from https://www.gyan.dev/ffmpeg/builds/ (release `ffmpeg-release-essentials.zip`) or install with winget:
+   ```powershell
+   winget install Gyan.FFmpeg
+   ```
+2. Add ffmpeg to PATH (installer often does this), or put `ffmpeg.exe` in a folder on your PATH.
+3. Verify in a **new** PowerShell window:
+   ```powershell
+   ffmpeg -version
+   ```
+4. Restart NeuroLearn (`python run.py`).
+
+**Finger counting** uses MP3 files under `static/audio/numbers/` if present; otherwise the browser speaks the number (no ffmpeg).
+
+**Read aloud / voice nav** use the browser Web Speech API (no ffmpeg).
 
 ## Health check
 

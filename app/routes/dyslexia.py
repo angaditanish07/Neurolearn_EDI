@@ -85,7 +85,6 @@ def submit_dyslexia_test():
 def analyze_reading():
     try:
         import speech_recognition as sr
-        from pydub import AudioSegment
     except ImportError:
         return jsonify({
             'success': False,
@@ -96,20 +95,19 @@ def analyze_reading():
         if 'audio' not in request.files:
             return jsonify({'success': False, 'error': 'No audio file provided'}), 400
 
+        from app.utils.audio_utils import prepare_audio_for_recognition
+
         audio_file = request.files['audio']
         test_id = request.form.get('test_id')
         target_text = request.form.get('target_text', '')
 
-        audio_segment = AudioSegment.from_file(io.BytesIO(audio_file.read()))
-        audio_segment = audio_segment.set_frame_rate(16000).set_channels(1)
+        wav_bytes = prepare_audio_for_recognition(audio_file)
 
         recognizer = sr.Recognizer()
         recognizer.energy_threshold = 300
         recognizer.dynamic_energy_threshold = True
 
-        wav_data = io.BytesIO()
-        audio_segment.export(wav_data, format='wav')
-        wav_data.seek(0)
+        wav_data = io.BytesIO(wav_bytes)
 
         with sr.AudioFile(wav_data) as source:
             audio = recognizer.record(source)
@@ -129,6 +127,9 @@ def analyze_reading():
             'accuracy': accuracy,
             'recognized_text': recognized_text,
         })
+    except RuntimeError as e:
+        logger.error('analyze_reading (audio setup): %s', e)
+        return jsonify({'success': False, 'error': str(e)}), 503
     except Exception as e:
         logger.error('analyze_reading: %s', e)
         err_name = type(e).__name__

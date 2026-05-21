@@ -150,7 +150,8 @@ body.has-dashboard-nav {
 .voice-controls-global {
     position: fixed;
     bottom: 24px;
-    right: 24px;
+    left: 24px;
+    right: auto;
     z-index: 1999;
     display: flex;
     flex-direction: column;
@@ -190,11 +191,7 @@ body.has-dashboard-nav {
     border: 0;
 }
 
-body.dyslexic-font {
-    font-family: 'OpenDyslexic', 'Lexend', sans-serif !important;
-    letter-spacing: 0.05em;
-    word-spacing: 0.1em;
-}
+/* Dyslexic font — see static/css/dyslexic-font.css */
 
 body.high-contrast {
     background-color: #000 !important;

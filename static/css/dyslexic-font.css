@@ -1,0 +1,46 @@
+/* OpenDyslexic — dyslexia-friendly typeface (working CDN; replaces broken open-dyslexic@1.0.0) */
+@font-face {
+    font-family: 'OpenDyslexic';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 400;
+    src: url('https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic@5.2.5/files/opendyslexic-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'OpenDyslexic';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 700;
+    src: url('https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic@5.2.5/files/opendyslexic-latin-700-normal.woff2') format('woff2');
+}
+
+body.dyslexic-font {
+    --font-regular: 'OpenDyslexic', sans-serif;
+    font-family: 'OpenDyslexic', sans-serif !important;
+    letter-spacing: 0.03em;
+    word-spacing: 0.08em;
+}
+
+body.dyslexic-font p,
+body.dyslexic-font h1,
+body.dyslexic-font h2,
+body.dyslexic-font h3,
+body.dyslexic-font h4,
+body.dyslexic-font h5,
+body.dyslexic-font h6,
+body.dyslexic-font li,
+body.dyslexic-font a,
+body.dyslexic-font span,
+body.dyslexic-font label,
+body.dyslexic-font button,
+body.dyslexic-font input,
+body.dyslexic-font textarea,
+body.dyslexic-font select,
+body.dyslexic-font .dashboard-nav,
+body.dyslexic-font .stat-card,
+body.dyslexic-font .section,
+body.dyslexic-font .path-card,
+body.dyslexic-font .modal-content {
+    font-family: 'OpenDyslexic', sans-serif !important;
+}
