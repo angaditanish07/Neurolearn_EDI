@@ -7,7 +7,7 @@
 3. Student completes **Dyslexia Screening** while logged in — results save to their profile.
 4. Parent sees progress, scores, and recommendations on `/parent/dashboard`.
 
-Default: SQLite database at `data/neurolearn.db` (created automatically).
+**Database:** MongoDB (see [MongoDB setup](#mongodb-setup) below).
 
 ## Quick start (Windows, no Docker)
 
@@ -89,6 +89,91 @@ Redis is optional (`REDIS_URL` can stay empty in `.env` for cookie sessions).
 
 **Read aloud / voice nav** use the browser Web Speech API (no ffmpeg).
 
+## MongoDB setup
+
+MongoDB does not use SQL **tables** — it uses **collections** (like tables) and **documents** (like rows). NeuroLearn uses four collections:
+
+| Collection | Purpose |
+|------------|---------|
+| `users` | Accounts (student/parent), passwords, link codes, preferences |
+| `parent_child_links` | Parent ↔ student family links |
+| `screening_results` | Dyslexia screening scores per student |
+| `progress_events` | Activity log (modules, games, screenings) |
+
+Indexes are created automatically when the app starts.
+
+### 1. Install MongoDB
+
+**Windows (recommended):**
+
+```powershell
+winget install MongoDB.Server
+```
+
+Or download [MongoDB Community Server](https://www.mongodb.com/try/download/community) and install as a service.
+
+**macOS:** `brew install mongodb-community` then `brew services start mongodb-community`
+
+**Linux:** follow [MongoDB install docs](https://www.mongodb.com/docs/manual/administration/install-on-linux/) for your distro.
+
+### 2. Configure `.env`
+
+```env
+MONGODB_URI=mongodb://localhost:27017/
+MONGODB_DB_NAME=neurolearn
+```
+
+**MongoDB Atlas (cloud):** create a free cluster, get the connection string, and set:
+
+```env
+MONGODB_URI=mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DB_NAME=neurolearn
+```
+
+### 3. Install Python dependency
+
+```powershell
+.\venv\Scripts\pip install pymongo
+```
+
+### 4. Initialize collections (optional)
+
+The app creates indexes on startup. To verify manually:
+
+```powershell
+.\venv\Scripts\python.exe scripts\init_mongodb.py
+```
+
+### 5. Migrate old SQLite data (optional)
+
+If you have `data/neurolearn.db` from before:
+
+```powershell
+.\venv\Scripts\python.exe scripts\migrate_sqlite_to_mongo.py
+```
+
+Then **register again or log in again** — user IDs are now MongoDB ObjectIds (long hex strings), not integers.
+
+### Useful MongoDB shell commands
+
+```javascript
+// Open shell: mongosh
+use neurolearn
+db.users.find().pretty()
+db.screening_results.find().pretty()
+db.progress_events.find().sort({ created_at: -1 }).limit(10)
+db.parent_child_links.find().pretty()
+```
+
+## Deploy for free
+
+See **[docs/DEPLOY-FREE.md](docs/DEPLOY-FREE.md)** for:
+
+- **MongoDB Atlas** (database — you already use this)
+- **Render.com** — easiest free Docker deploy (`render.yaml` included)
+- **Oracle Cloud free VM** — best for full TensorFlow/MediaPipe features
+- **Cloudflare Tunnel** — free public HTTPS link to your local `python run.py`
+
 ## Health check
 
-http://127.0.0.1:8080/healthz
+http://127.0.0.1:8080/healthz — should show `"mongodb": true`

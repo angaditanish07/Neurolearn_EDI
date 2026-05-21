@@ -1,0 +1,25 @@
+# Render Blueprint — free Docker web service
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: neurolearn
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: ENABLE_DEBUG_ROUTES
+        value: "0"
+      - key: SESSION_COOKIE_SECURE
+        value: "1"
+      - key: MONGODB_DB_NAME
+        value: neurolearn
+      - key: MONGODB_URI
+        sync: false
+      - key: FLASK_SECRET_KEY
+        generateValue: true

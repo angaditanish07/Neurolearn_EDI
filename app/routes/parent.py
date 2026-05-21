@@ -23,7 +23,7 @@ def parent_children():
     })
 
 
-@parent_bp.route('/api/parent/child/<int:child_id>/summary', methods=['GET'])
+@parent_bp.route('/api/parent/child/<child_id>/summary', methods=['GET'])
 @login_required
 @role_required('parent')
 def parent_child_summary(child_id):

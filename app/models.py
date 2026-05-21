@@ -1,29 +1,56 @@
-from datetime import datetime
+"""MongoDB document wrappers (NeuroLearn collections)."""
 
-from app.db import db
+from app.mongo import parse_object_id, utcnow
+
+DEFAULT_PREFERENCES = {
+    'font_size': 16,
+    'dyslexic_font': False,
+    'high_contrast': False,
+    'read_aloud': False,
+}
 
 
-class User(db.Model):
-    __tablename__ = 'users'
+class User:
+    """users collection"""
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False, index=True)
-    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), nullable=False)  # student | parent
-    display_name = db.Column(db.String(120), nullable=False)
-    link_code = db.Column(db.String(12), unique=True, nullable=True, index=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    def __init__(self, doc):
+        self._doc = doc
 
-    preferences = db.relationship(
-        'UserPreferences', backref='user', uselist=False, cascade='all, delete-orphan'
-    )
-    screening_results = db.relationship(
-        'ScreeningResult', backref='user', lazy='dynamic', cascade='all, delete-orphan'
-    )
-    progress_events = db.relationship(
-        'ProgressEvent', backref='user', lazy='dynamic', cascade='all, delete-orphan'
-    )
+    @property
+    def id(self):
+        return str(self._doc['_id'])
+
+    @property
+    def username(self):
+        return self._doc.get('username', '')
+
+    @property
+    def email(self):
+        return self._doc.get('email', '')
+
+    @property
+    def password_hash(self):
+        return self._doc.get('password_hash', '')
+
+    @property
+    def role(self):
+        return self._doc.get('role', 'student')
+
+    @property
+    def display_name(self):
+        return self._doc.get('display_name', '')
+
+    @property
+    def link_code(self):
+        return self._doc.get('link_code')
+
+    @property
+    def created_at(self):
+        return self._doc.get('created_at')
+
+    @property
+    def preferences(self):
+        return self._doc.get('preferences') or dict(DEFAULT_PREFERENCES)
 
     def to_dict(self, include_link_code=False):
         data = {
@@ -37,48 +64,127 @@ class User(db.Model):
             data['link_code'] = self.link_code
         return data
 
-
-class ParentChildLink(db.Model):
-    __tablename__ = 'parent_child_links'
-    __table_args__ = (db.UniqueConstraint('parent_id', 'child_id', name='uq_parent_child'),)
-
-    id = db.Column(db.Integer, primary_key=True)
-    parent_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    child_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    linked_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    parent = db.relationship('User', foreign_keys=[parent_id], backref='children_links')
-    child = db.relationship('User', foreign_keys=[child_id], backref='parent_links')
-
-
-class ScreeningResult(db.Model):
-    __tablename__ = 'screening_results'
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    overall_score = db.Column(db.Float, nullable=False)
-    risk_level = db.Column(db.Integer, nullable=False)
-    component_scores = db.Column(db.JSON, nullable=True)
-    recommendations = db.Column(db.JSON, nullable=True)
-    feature_importance = db.Column(db.JSON, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    @staticmethod
+    def new_document(username, email, password_hash, role, display_name, link_code=None):
+        return {
+            'username': username,
+            'email': email,
+            'password_hash': password_hash,
+            'role': role,
+            'display_name': display_name,
+            'link_code': link_code,
+            'preferences': dict(DEFAULT_PREFERENCES),
+            'created_at': utcnow(),
+        }
 
 
-class ProgressEvent(db.Model):
-    __tablename__ = 'progress_events'
+class ParentChildLink:
+    """parent_child_links collection"""
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    event_type = db.Column(db.String(50), nullable=False, index=True)
-    payload = db.Column(db.JSON, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    def __init__(self, doc):
+        self._doc = doc
+
+    @property
+    def id(self):
+        return str(self._doc['_id'])
+
+    @property
+    def parent_id(self):
+        return str(self._doc['parent_id'])
+
+    @property
+    def child_id(self):
+        return str(self._doc['child_id'])
+
+    @property
+    def linked_at(self):
+        return self._doc.get('linked_at')
 
 
-class UserPreferences(db.Model):
-    __tablename__ = 'user_preferences'
+class ScreeningResult:
+    """screening_results collection"""
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    font_size = db.Column(db.Integer, default=16)
-    dyslexic_font = db.Column(db.Boolean, default=False)
-    high_contrast = db.Column(db.Boolean, default=False)
-    read_aloud = db.Column(db.Boolean, default=False)
+    def __init__(self, doc):
+        self._doc = doc
+
+    @property
+    def id(self):
+        return str(self._doc['_id'])
+
+    @property
+    def user_id(self):
+        return str(self._doc['user_id'])
+
+    @property
+    def overall_score(self):
+        return self._doc.get('overall_score')
+
+    @property
+    def risk_level(self):
+        return self._doc.get('risk_level')
+
+    @property
+    def component_scores(self):
+        return self._doc.get('component_scores') or {}
+
+    @property
+    def recommendations(self):
+        return self._doc.get('recommendations') or []
+
+    @property
+    def feature_importance(self):
+        return self._doc.get('feature_importance') or {}
+
+    @property
+    def created_at(self):
+        return self._doc.get('created_at')
+
+    @staticmethod
+    def new_document(user_id, overall_score, risk_level, component_scores,
+                     recommendations, feature_importance=None):
+        oid = parse_object_id(user_id)
+        return {
+            'user_id': oid,
+            'overall_score': float(overall_score),
+            'risk_level': int(risk_level),
+            'component_scores': component_scores or {},
+            'recommendations': recommendations or [],
+            'feature_importance': feature_importance or {},
+            'created_at': utcnow(),
+        }
+
+
+class ProgressEvent:
+    """progress_events collection"""
+
+    def __init__(self, doc):
+        self._doc = doc
+
+    @property
+    def id(self):
+        return str(self._doc['_id'])
+
+    @property
+    def user_id(self):
+        return str(self._doc['user_id'])
+
+    @property
+    def event_type(self):
+        return self._doc.get('event_type', '')
+
+    @property
+    def payload(self):
+        return self._doc.get('payload') or {}
+
+    @property
+    def created_at(self):
+        return self._doc.get('created_at')
+
+    @staticmethod
+    def new_document(user_id, event_type, payload=None):
+        return {
+            'user_id': parse_object_id(user_id),
+            'event_type': event_type,
+            'payload': payload or {},
+            'created_at': utcnow(),
+        }

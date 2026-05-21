@@ -50,8 +50,8 @@ def create_app(config_class=Config):
 
     _configure_sessions(flask_app)
 
-    from app.db import init_db
-    init_db(flask_app)
+    from app.mongo import init_mongo
+    init_mongo(flask_app)
 
     socketio.init_app(flask_app, cors_allowed_origins='*')
 

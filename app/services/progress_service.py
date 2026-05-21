@@ -1,56 +1,57 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-from app.db import db
-from app.models import ParentChildLink, ProgressEvent, ScreeningResult, User
+from app.models import ProgressEvent, ScreeningResult, User
+from app.mongo import get_db, parse_object_id, utcnow
 
 
 def save_screening_result(user_id, overall_score, risk_level, component_scores,
                           recommendations, feature_importance=None):
-    row = ScreeningResult(
-        user_id=user_id,
-        overall_score=float(overall_score),
-        risk_level=int(risk_level),
-        component_scores=component_scores or {},
-        recommendations=recommendations or [],
-        feature_importance=feature_importance or {},
+    db = get_db()
+    doc = ScreeningResult.new_document(
+        user_id, overall_score, risk_level, component_scores,
+        recommendations, feature_importance,
     )
-    db.session.add(row)
+    result = db.screening_results.insert_one(doc)
+    doc['_id'] = result.inserted_id
     record_progress_event(user_id, 'dyslexia_screening', {
         'overall_score': overall_score,
         'risk_level': risk_level,
     })
-    db.session.commit()
-    return row
+    return ScreeningResult(doc)
 
 
 def record_progress_event(user_id, event_type, payload=None):
-    event = ProgressEvent(
-        user_id=user_id,
-        event_type=event_type,
-        payload=payload or {},
-    )
-    db.session.add(event)
-    db.session.commit()
-    return event
+    db = get_db()
+    doc = ProgressEvent.new_document(user_id, event_type, payload)
+    result = db.progress_events.insert_one(doc)
+    doc['_id'] = result.inserted_id
+    return ProgressEvent(doc)
+
+
+def _user_oid(user_id):
+    return parse_object_id(user_id)
 
 
 def _compute_streak(user_id):
-    events = (
-        ProgressEvent.query.filter_by(user_id=user_id)
-        .order_by(ProgressEvent.created_at.desc())
+    oid = _user_oid(user_id)
+    if not oid:
+        return 0
+    events = list(
+        get_db().progress_events.find({'user_id': oid})
+        .sort('created_at', -1)
         .limit(200)
-        .all()
     )
     if not events:
         return 0
     days = set()
     for e in events:
-        if e.created_at:
-            days.add(e.created_at.date())
+        created = e.get('created_at')
+        if created:
+            days.add(created.date())
     if not days:
         return 0
     streak = 0
-    day = datetime.utcnow().date()
+    day = utcnow().date()
     while day in days:
         streak += 1
         day -= timedelta(days=1)
@@ -58,21 +59,26 @@ def _compute_streak(user_id):
 
 
 def get_student_summary(user_id):
-    latest = (
-        ScreeningResult.query.filter_by(user_id=user_id)
-        .order_by(ScreeningResult.created_at.desc())
-        .first()
+    db = get_db()
+    oid = _user_oid(user_id)
+    if not oid:
+        return _empty_summary()
+
+    latest_doc = db.screening_results.find_one(
+        {'user_id': oid},
+        sort=[('created_at', -1)],
     )
-    screening_count = ScreeningResult.query.filter_by(user_id=user_id).count()
-    event_count = ProgressEvent.query.filter_by(user_id=user_id).count()
+    latest = ScreeningResult(latest_doc) if latest_doc else None
+    screening_count = db.screening_results.count_documents({'user_id': oid})
+    event_count = db.progress_events.count_documents({'user_id': oid})
 
     component_scores = {}
     recommendations = []
     overall_score = None
     risk_level = None
     if latest:
-        component_scores = latest.component_scores or {}
-        recommendations = latest.recommendations or []
+        component_scores = latest.component_scores
+        recommendations = latest.recommendations
         overall_score = latest.overall_score
         risk_level = latest.risk_level
 
@@ -82,16 +88,13 @@ def get_student_summary(user_id):
         'games': _path_percent(user_id, 'interactive_fingers', 'games'),
     }
 
-    last_event = (
-        ProgressEvent.query.filter_by(user_id=user_id)
-        .order_by(ProgressEvent.created_at.desc())
-        .first()
+    last_doc = db.progress_events.find_one(
+        {'user_id': oid},
+        sort=[('created_at', -1)],
     )
-    last_active = (
-        last_event.created_at.isoformat()
-        if last_event and last_event.created_at
-        else None
-    )
+    last_active = None
+    if last_doc and last_doc.get('created_at'):
+        last_active = last_doc['created_at'].isoformat()
 
     return {
         'streak': _compute_streak(user_id),
@@ -112,10 +115,28 @@ def get_student_summary(user_id):
     }
 
 
+def _empty_summary():
+    return {
+        'streak': 0,
+        'lessons_completed': 0,
+        'skills_mastered': 0,
+        'screening_count': 0,
+        'latest_screening': None,
+        'path_progress': {'interactive': 0, 'dyslexia': 0, 'games': 0},
+        'component_scores': {},
+        'recommendations': [],
+        'last_active': None,
+    }
+
+
 def _path_percent(user_id, event_type, key):
-    count = ProgressEvent.query.filter_by(
-        user_id=user_id, event_type=event_type
-    ).count()
+    oid = _user_oid(user_id)
+    if not oid:
+        return 0
+    count = get_db().progress_events.count_documents({
+        'user_id': oid,
+        'event_type': event_type,
+    })
     if key == 'interactive':
         return min(100, 20 + count * 15)
     return min(100, count * 25)
@@ -132,55 +153,77 @@ EVENT_LABELS = {
 
 
 def get_activity_stats(user_id):
-    """Rich activity data for parent dashboard."""
-    events = (
-        ProgressEvent.query.filter_by(user_id=user_id)
-        .order_by(ProgressEvent.created_at.desc())
+    oid = _user_oid(user_id)
+    if not oid:
+        return {
+            'breakdown': {},
+            'timeline': [],
+            'events_this_week': 0,
+            'total_events': 0,
+            'last_active': None,
+        }
+
+    db = get_db()
+    events = list(
+        db.progress_events.find({'user_id': oid})
+        .sort('created_at', -1)
         .limit(100)
-        .all()
     )
     breakdown = {}
     for e in events:
-        breakdown[e.event_type] = breakdown.get(e.event_type, 0) + 1
+        et = e.get('event_type', '')
+        breakdown[et] = breakdown.get(et, 0) + 1
 
-    now = datetime.utcnow()
+    now = utcnow()
     week_ago = now - timedelta(days=7)
     events_this_week = sum(
-        1 for e in events if e.created_at and e.created_at >= week_ago
+        1 for e in events if e.get('created_at') and e['created_at'] >= week_ago
     )
 
     timeline = []
     for e in events[:25]:
+        et = e.get('event_type', '')
+        created = e.get('created_at')
         timeline.append({
-            'type': e.event_type,
-            'label': EVENT_LABELS.get(e.event_type, e.event_type.replace('_', ' ').title()),
-            'at': e.created_at.isoformat() if e.created_at else None,
-            'payload': e.payload or {},
+            'type': et,
+            'label': EVENT_LABELS.get(et, et.replace('_', ' ').title()),
+            'at': created.isoformat() if created else None,
+            'payload': e.get('payload') or {},
         })
 
-    last_active = events[0].created_at.isoformat() if events and events[0].created_at else None
+    last_active = None
+    if events and events[0].get('created_at'):
+        last_active = events[0]['created_at'].isoformat()
 
     return {
         'breakdown': breakdown,
         'timeline': timeline,
         'events_this_week': events_this_week,
-        'total_events': ProgressEvent.query.filter_by(user_id=user_id).count(),
+        'total_events': db.progress_events.count_documents({'user_id': oid}),
         'last_active': last_active,
     }
 
 
 def get_path_progress_detailed(user_id):
-    """Percent complete per learning path from real events."""
-    screening_count = ScreeningResult.query.filter_by(user_id=user_id).count()
-    emotion = ProgressEvent.query.filter_by(
-        user_id=user_id, event_type='interactive_emotion'
-    ).count()
-    fingers = ProgressEvent.query.filter_by(
-        user_id=user_id, event_type='interactive_fingers'
-    ).count()
-    visits = ProgressEvent.query.filter_by(
-        user_id=user_id, event_type='module_visit'
-    ).count()
+    oid = _user_oid(user_id)
+    if not oid:
+        return {
+            'interactive': {'percent': 0, 'emotion_sessions': 0, 'finger_sessions': 0},
+            'dyslexia': {'percent': 0, 'screenings_done': 0},
+            'games': {'percent': 0, 'sessions': 0},
+        }
+
+    db = get_db()
+    screening_count = db.screening_results.count_documents({'user_id': oid})
+    emotion = db.progress_events.count_documents({
+        'user_id': oid, 'event_type': 'interactive_emotion',
+    })
+    fingers = db.progress_events.count_documents({
+        'user_id': oid, 'event_type': 'interactive_fingers',
+    })
+    visits = db.progress_events.count_documents({
+        'user_id': oid, 'event_type': 'module_visit',
+    })
 
     return {
         'interactive': {
@@ -200,51 +243,68 @@ def get_path_progress_detailed(user_id):
 
 
 def get_screening_history(user_id, limit=10):
+    oid = _user_oid(user_id)
+    if not oid:
+        return []
     rows = (
-        ScreeningResult.query.filter_by(user_id=user_id)
-        .order_by(ScreeningResult.created_at.desc())
+        get_db().screening_results.find({'user_id': oid})
+        .sort('created_at', -1)
         .limit(limit)
-        .all()
     )
     return [
         {
-            'id': r.id,
-            'overall_score': r.overall_score,
-            'risk_level': r.risk_level,
-            'component_scores': r.component_scores,
-            'recommendations': r.recommendations,
-            'created_at': r.created_at.isoformat() if r.created_at else None,
+            'id': str(r['_id']),
+            'overall_score': r.get('overall_score'),
+            'risk_level': r.get('risk_level'),
+            'component_scores': r.get('component_scores'),
+            'recommendations': r.get('recommendations'),
+            'created_at': r['created_at'].isoformat() if r.get('created_at') else None,
         }
         for r in rows
     ]
 
 
 def get_parent_children(parent_id):
-    links = ParentChildLink.query.filter_by(parent_id=parent_id).all()
+    parent_oid = _user_oid(parent_id)
+    if not parent_oid:
+        return []
+    db = get_db()
+    links = db.parent_child_links.find({'parent_id': parent_oid})
     children = []
     for link in links:
-        child = User.query.get(link.child_id)
-        if child:
+        child_doc = db.users.find_one({'_id': link['child_id']})
+        if child_doc:
+            child = User(child_doc)
             summary = get_student_summary(child.id)
+            linked_at = link.get('linked_at')
             children.append({
                 'id': child.id,
                 'display_name': child.display_name,
                 'username': child.username,
-                'linked_at': link.linked_at.isoformat() if link.linked_at else None,
+                'linked_at': linked_at.isoformat() if linked_at else None,
                 'summary': summary,
             })
     return children
 
 
 def get_child_summary_for_parent(parent_id, child_id):
-    link = ParentChildLink.query.filter_by(
-        parent_id=parent_id, child_id=child_id
-    ).first()
+    parent_oid = _user_oid(parent_id)
+    child_oid = _user_oid(child_id)
+    if not parent_oid or not child_oid:
+        return None
+
+    link = get_db().parent_child_links.find_one({
+        'parent_id': parent_oid,
+        'child_id': child_oid,
+    })
     if not link:
         return None
-    child = User.query.get(child_id)
-    if not child:
+
+    child_doc = get_db().users.find_one({'_id': child_oid})
+    if not child_doc:
         return None
+
+    child = User(child_doc)
     summary = get_student_summary(child_id)
     summary['path_progress'] = get_path_progress_detailed(child_id)
 
@@ -257,6 +317,11 @@ def get_child_summary_for_parent(parent_id, child_id):
 
 
 def parent_owns_child(parent_id, child_id):
-    return ParentChildLink.query.filter_by(
-        parent_id=parent_id, child_id=child_id
-    ).first() is not None
+    parent_oid = _user_oid(parent_id)
+    child_oid = _user_oid(child_id)
+    if not parent_oid or not child_oid:
+        return False
+    return get_db().parent_child_links.find_one({
+        'parent_id': parent_oid,
+        'child_id': child_oid,
+    }) is not None

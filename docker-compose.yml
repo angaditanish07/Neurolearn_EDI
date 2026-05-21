@@ -11,6 +11,8 @@ services:
       FLASK_ENV: production
       FLASK_DEBUG: "0"
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-replace-me-in-production}
+      MONGODB_URI: ${MONGODB_URI:?Set MONGODB_URI in .env}
+      MONGODB_DB_NAME: ${MONGODB_DB_NAME:-neurolearn}
       ENABLE_DEBUG_ROUTES: "0"
       REDIS_URL: ${REDIS_URL:-}
     volumes:

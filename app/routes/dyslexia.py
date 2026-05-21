@@ -162,7 +162,7 @@ def notify_parent():
 
         child_id = data.get('child_id') or session.get('user_id')
         if session.get('role') == 'parent' and data.get('child_id'):
-            if not parent_owns_child(session['user_id'], int(child_id)):
+            if not parent_owns_child(session['user_id'], child_id):
                 return jsonify({'success': False, 'error': 'Not linked to this child'}), 403
 
         from datetime import datetime

@@ -15,3 +15,6 @@ test_results/*
 .cursor/
 data/*.db
 
+# MongoDB local data (if using embedded instance)
+data/mongodb/
+

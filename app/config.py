@@ -20,12 +20,8 @@ class Config:
     REDIS_URL = (os.environ.get('REDIS_URL') or '').strip()
     HOST = os.environ.get('HOST', '0.0.0.0')
     PORT = int(os.environ.get('PORT', '8080'))
-    _default_sqlite = 'sqlite:///' + os.path.join(
-        _PROJECT_ROOT, 'data', 'neurolearn.db'
-    ).replace('\\', '/')
-    _database_url = (os.environ.get('DATABASE_URL') or '').strip()
-    SQLALCHEMY_DATABASE_URI = _database_url if _database_url else _default_sqlite
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    MONGODB_URI = (os.environ.get('MONGODB_URI') or 'mongodb://localhost:27017/').strip()
+    MONGODB_DB_NAME = (os.environ.get('MONGODB_DB_NAME') or 'neurolearn').strip()
     USE_HTTPS = os.environ.get('USE_HTTPS', '0').strip() in ('1', 'true', 'yes')
 
 

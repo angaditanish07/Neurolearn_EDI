@@ -1,17 +1,19 @@
 import secrets
 import string
 
+from pymongo.errors import DuplicateKeyError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app.db import db
-from app.models import ParentChildLink, User, UserPreferences
+from app.models import User
+from app.mongo import get_db, parse_object_id, utcnow
 
 
 def _generate_link_code(length=8):
     alphabet = string.ascii_uppercase + string.digits
+    db = get_db()
     for _ in range(20):
         code = ''.join(secrets.choice(alphabet) for _ in range(length))
-        if not User.query.filter_by(link_code=code).first():
+        if not db.users.find_one({'link_code': code}):
             return code
     return secrets.token_hex(4).upper()
 
@@ -28,12 +30,14 @@ def register_user(username, email, password, role, display_name):
         return None, 'Username must be at least 3 characters.'
     if len(password) < 6:
         return None, 'Password must be at least 6 characters.'
-    if User.query.filter_by(username=username).first():
+
+    db = get_db()
+    if db.users.find_one({'username': username}):
         return None, 'Username already taken.'
-    if User.query.filter_by(email=email).first():
+    if db.users.find_one({'email': email}):
         return None, 'Email already registered.'
 
-    user = User(
+    doc = User.new_document(
         username=username,
         email=email,
         password_hash=generate_password_hash(password),
@@ -41,37 +45,56 @@ def register_user(username, email, password, role, display_name):
         display_name=display_name or username,
         link_code=_generate_link_code() if role == 'student' else None,
     )
-    db.session.add(user)
-    db.session.flush()
-    db.session.add(UserPreferences(user_id=user.id))
-    db.session.commit()
-    return user, None
+    try:
+        result = db.users.insert_one(doc)
+    except DuplicateKeyError:
+        return None, 'Username or email already registered.'
+    doc['_id'] = result.inserted_id
+    return User(doc), None
 
 
 def authenticate(username, password):
     username = (username or '').strip().lower()
-    user = User.query.filter_by(username=username).first()
-    if user and check_password_hash(user.password_hash, password):
-        return user
+    doc = get_db().users.find_one({'username': username})
+    if doc and check_password_hash(doc['password_hash'], password):
+        return User(doc)
     return None
 
 
 def link_parent_to_child(parent_id, link_code):
     link_code = (link_code or '').strip().upper()
-    child = User.query.filter_by(link_code=link_code, role='student').first()
-    if not child:
+    db = get_db()
+    child_doc = db.users.find_one({'link_code': link_code, 'role': 'student'})
+    if not child_doc:
         return None, 'Invalid link code. Check the code from your child\'s profile.'
 
-    existing = ParentChildLink.query.filter_by(
-        parent_id=parent_id, child_id=child.id
-    ).first()
+    child = User(child_doc)
+    parent_oid = parse_object_id(parent_id)
+    child_oid = parse_object_id(child.id)
+    if not parent_oid or not child_oid:
+        return None, 'Invalid account.'
+
+    existing = db.parent_child_links.find_one({
+        'parent_id': parent_oid,
+        'child_id': child_oid,
+    })
     if existing:
         return child, None
 
-    db.session.add(ParentChildLink(parent_id=parent_id, child_id=child.id))
-    db.session.commit()
+    try:
+        db.parent_child_links.insert_one({
+            'parent_id': parent_oid,
+            'child_id': child_oid,
+            'linked_at': utcnow(),
+        })
+    except DuplicateKeyError:
+        pass
     return child, None
 
 
 def get_user_by_id(user_id):
-    return User.query.get(user_id)
+    oid = parse_object_id(user_id)
+    if not oid:
+        return None
+    doc = get_db().users.find_one({'_id': oid})
+    return User(doc) if doc else None
