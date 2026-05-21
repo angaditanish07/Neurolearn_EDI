@@ -82,6 +82,17 @@ def get_student_summary(user_id):
         'games': _path_percent(user_id, 'interactive_fingers', 'games'),
     }
 
+    last_event = (
+        ProgressEvent.query.filter_by(user_id=user_id)
+        .order_by(ProgressEvent.created_at.desc())
+        .first()
+    )
+    last_active = (
+        last_event.created_at.isoformat()
+        if last_event and last_event.created_at
+        else None
+    )
+
     return {
         'streak': _compute_streak(user_id),
         'lessons_completed': screening_count + max(0, event_count // 5),
@@ -97,6 +108,7 @@ def get_student_summary(user_id):
         'path_progress': path_progress,
         'component_scores': component_scores,
         'recommendations': recommendations,
+        'last_active': last_active,
     }
 
 
@@ -107,6 +119,84 @@ def _path_percent(user_id, event_type, key):
     if key == 'interactive':
         return min(100, 20 + count * 15)
     return min(100, count * 25)
+
+
+EVENT_LABELS = {
+    'dyslexia_screening': 'Dyslexia screening',
+    'interactive_emotion': 'Emotion learning',
+    'interactive_fingers': 'Finger counting',
+    'interactive_face': 'Face features',
+    'module_visit': 'Module visit',
+    'feedback': 'Feedback',
+}
+
+
+def get_activity_stats(user_id):
+    """Rich activity data for parent dashboard."""
+    events = (
+        ProgressEvent.query.filter_by(user_id=user_id)
+        .order_by(ProgressEvent.created_at.desc())
+        .limit(100)
+        .all()
+    )
+    breakdown = {}
+    for e in events:
+        breakdown[e.event_type] = breakdown.get(e.event_type, 0) + 1
+
+    now = datetime.utcnow()
+    week_ago = now - timedelta(days=7)
+    events_this_week = sum(
+        1 for e in events if e.created_at and e.created_at >= week_ago
+    )
+
+    timeline = []
+    for e in events[:25]:
+        timeline.append({
+            'type': e.event_type,
+            'label': EVENT_LABELS.get(e.event_type, e.event_type.replace('_', ' ').title()),
+            'at': e.created_at.isoformat() if e.created_at else None,
+            'payload': e.payload or {},
+        })
+
+    last_active = events[0].created_at.isoformat() if events and events[0].created_at else None
+
+    return {
+        'breakdown': breakdown,
+        'timeline': timeline,
+        'events_this_week': events_this_week,
+        'total_events': ProgressEvent.query.filter_by(user_id=user_id).count(),
+        'last_active': last_active,
+    }
+
+
+def get_path_progress_detailed(user_id):
+    """Percent complete per learning path from real events."""
+    screening_count = ScreeningResult.query.filter_by(user_id=user_id).count()
+    emotion = ProgressEvent.query.filter_by(
+        user_id=user_id, event_type='interactive_emotion'
+    ).count()
+    fingers = ProgressEvent.query.filter_by(
+        user_id=user_id, event_type='interactive_fingers'
+    ).count()
+    visits = ProgressEvent.query.filter_by(
+        user_id=user_id, event_type='module_visit'
+    ).count()
+
+    return {
+        'interactive': {
+            'percent': min(100, 15 + emotion * 10 + fingers * 8 + visits * 5),
+            'emotion_sessions': emotion,
+            'finger_sessions': fingers,
+        },
+        'dyslexia': {
+            'percent': min(100, screening_count * 50),
+            'screenings_done': screening_count,
+        },
+        'games': {
+            'percent': min(100, fingers * 5),
+            'sessions': fingers,
+        },
+    }
 
 
 def get_screening_history(user_id, limit=10):
@@ -155,10 +245,14 @@ def get_child_summary_for_parent(parent_id, child_id):
     child = User.query.get(child_id)
     if not child:
         return None
+    summary = get_student_summary(child_id)
+    summary['path_progress'] = get_path_progress_detailed(child_id)
+
     return {
         'child': child.to_dict(),
-        'summary': get_student_summary(child_id),
+        'summary': summary,
         'history': get_screening_history(child_id, limit=10),
+        'activity': get_activity_stats(child_id),
     }
 
 

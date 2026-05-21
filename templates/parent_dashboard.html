@@ -3,52 +3,55 @@
 <head>
     {% include 'includes/head_common.html' %}
     <title>Parent Dashboard — NeuroLearn</title>
-    <style>
-        body { font-family: 'Lexend', sans-serif; margin: 0; background: #f8fafc; }
-        .header { background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; padding: 1.5rem 2rem; }
-        .header a { color: #fff; margin-left: 1rem; }
-        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
-        .card { background: #fff; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .child-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
-        .child-card { border: 2px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem; cursor: pointer; }
-        .child-card.active { border-color: #6366f1; background: #eef2ff; }
-        .btn { padding: 0.5rem 1rem; border-radius: 0.5rem; border: none; cursor: pointer; background: #6366f1; color: #fff; }
-        .btn-outline { background: #fff; color: #6366f1; border: 2px solid #6366f1; }
-        .rec-list { list-style: disc; padding-left: 1.25rem; }
-        .score-bar { height: 8px; background: #e2e8f0; border-radius: 4px; margin: 0.25rem 0 0.75rem; }
-        .score-fill { height: 100%; background: #22c55e; border-radius: 4px; }
-        .disclaimer { font-size: 0.85rem; color: #64748b; }
-        input[type=text] { padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.5rem; width: 200px; }
-        #msg { margin-top: 0.5rem; color: #16a34a; }
-        #err { margin-top: 0.5rem; color: #dc2626; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/parent-dashboard.css') }}">
 </head>
 <body class="has-dashboard-nav">
     {% include 'includes/dashboard_navbar.html' %}
-    <header class="header" style="margin-top:0;">
-        <strong>Parent Dashboard</strong>
-        <span id="parentName"></span>
+    <header class="parent-dash-header">
+        <h1>Parent Dashboard</h1>
+        <p id="parentName">Track your child's learning in real time</p>
     </header>
-    <div class="container">
-        <div class="card">
+    <div class="parent-container">
+        <div class="parent-card">
             <h2>Link your child</h2>
             <p>Enter the family link code from your child's NeuroLearn profile.</p>
             <input type="text" id="linkCode" placeholder="e.g. ABC12XYZ" maxlength="12">
-            <button class="btn" id="linkBtn">Link child</button>
+            <button type="button" class="parent-btn" id="linkBtn">Link child</button>
             <div id="msg"></div>
             <div id="err"></div>
         </div>
-        <div class="card">
+
+        <div class="parent-card">
             <h2>Your children</h2>
             <div id="childrenList" class="child-grid">Loading...</div>
         </div>
-        <div class="card" id="detailPanel" hidden>
+
+        <div class="parent-card" id="detailPanel" hidden>
             <h2 id="detailTitle">Child progress</h2>
-            <p class="disclaimer">Educational screening only — not a medical diagnosis. Consult specialists for clinical assessment.</p>
+            <p class="disclaimer" style="font-size:0.85rem;color:#64748b;">
+                Educational screening only — not a medical diagnosis.
+            </p>
+
+            <div id="statsRow" class="parent-stats-row"></div>
+
+            <h3>Learning paths</h3>
+            <div id="pathProgress" class="path-progress-grid"></div>
+
+            <h3>Screening trend</h3>
+            <div id="screeningChart" class="screening-chart"></div>
+
+            <h3>Skill breakdown</h3>
             <div id="detailScores"></div>
+
+            <h3>Activity breakdown</h3>
+            <div id="activityBreakdown" class="activity-breakdown"></div>
+
+            <h3>Recent activity</h3>
+            <div id="activityTimeline" class="timeline"></div>
+
             <h3>Suggestions</h3>
             <ul id="detailRecs" class="rec-list"></ul>
-            <button class="btn btn-outline" id="notifyBtn">Request video check-in</button>
+            <button type="button" class="parent-btn parent-btn-outline" id="notifyBtn">Request video check-in</button>
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>

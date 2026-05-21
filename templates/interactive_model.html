@@ -1228,11 +1228,11 @@
                 console.log('Finger counting response:', data);
                 
                 if (data.success) {
-                    updateFingerCountFeedback(data.total_fingers, data.hand_counts);
+                    updateFingerCountFeedback(data.total_fingers, data.hand_counts || []);
                 } else if (data.error) {
                     console.error('Finger counting error:', data.error);
-                    const feedbackContainer = document.querySelector('.finger-count-feedback');
-                    feedbackContainer.innerHTML = 'Show your hand to the camera!';
+                    const ft = document.querySelector('.finger-count-feedback .feedback-text');
+                    if (ft) ft.textContent = data.error || 'Show your hands to the camera';
                 }
             } catch (error) {
                 console.error('Error detecting fingers:', error);
@@ -1342,43 +1342,64 @@
             }
         }
 
+        let lastFingerTotal = -1;
+
         function updateFingerCountFeedback(totalFingers, handCounts) {
             const feedbackDiv = document.querySelector('.finger-count-feedback');
-            const numberDisplay = feedbackDiv.querySelector('.number-display');
+            if (!feedbackDiv) return;
+
+            const numberVisual = feedbackDiv.querySelector('.number-visual');
             const fingerDots = feedbackDiv.querySelector('.finger-dots');
             const feedbackText = feedbackDiv.querySelector('.feedback-text');
             const progressBar = feedbackDiv.querySelector('.progress');
-            
-            // Update number display with animation
-            numberDisplay.textContent = totalFingers;
-            numberDisplay.classList.add('bounce');
-            setTimeout(() => numberDisplay.classList.remove('bounce'), 1000);
-            
-            // Update finger dots
-            fingerDots.innerHTML = '';
-            for (let i = 0; i < totalFingers; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'finger-dot';
-                fingerDots.appendChild(dot);
+            const leftEl = document.getElementById('leftHandCount');
+            const rightEl = document.getElementById('rightHandCount');
+
+            const total = totalFingers || 0;
+            const counts = handCounts || [];
+
+            if (numberVisual) {
+                numberVisual.textContent = String(total);
+                numberVisual.classList.add('bounce');
+                setTimeout(() => numberVisual.classList.remove('bounce'), 600);
             }
-            
-            // Update feedback text
-            let feedback = '';
-            if (handCounts.length === 2) {
-                feedback = `Left hand: ${handCounts[0]} fingers, Right hand: ${handCounts[1]} fingers`;
-            } else if (handCounts.length === 1) {
-                feedback = `${handCounts[0]} fingers detected`;
-            } else {
-                feedback = 'Show your hands to the camera';
+
+            if (fingerDots) {
+                fingerDots.innerHTML = '';
+                for (let i = 0; i < total; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'finger-dot';
+                    fingerDots.appendChild(dot);
+                }
             }
-            feedbackText.textContent = feedback;
-            
-            // Update progress bar
-            progressBar.style.width = `${(totalFingers / 10) * 100}%`;
-            
-            // Play audio feedback
-            const audio = new Audio(`/static/audio/numbers/${totalFingers}.mp3`);
-            audio.play().catch(error => console.error('Error playing audio:', error));
+
+            if (leftEl) leftEl.textContent = counts[0] != null ? String(counts[0]) : '0';
+            if (rightEl) rightEl.textContent = counts[1] != null ? String(counts[1]) : '0';
+
+            if (feedbackText) {
+                if (counts.length === 2) {
+                    feedbackText.textContent =
+                        `Hand 1: ${counts[0]} fingers · Hand 2: ${counts[1]} fingers · Total: ${total}`;
+                } else if (counts.length === 1) {
+                    feedbackText.textContent = `${counts[0]} finger(s) on one hand · Total: ${total}`;
+                } else if (total === 0) {
+                    feedbackText.textContent = 'Show your hand(s) to the camera';
+                } else {
+                    feedbackText.textContent = `Total fingers: ${total}`;
+                }
+            }
+
+            if (progressBar) {
+                progressBar.style.width = `${Math.min(100, (total / 10) * 100)}%`;
+            }
+
+            if (total !== lastFingerTotal && window.speechSynthesis) {
+                lastFingerTotal = total;
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(String(total));
+                u.rate = 0.9;
+                window.speechSynthesis.speak(u);
+            }
         }
 
         function beginModule(name, title) {
@@ -1415,15 +1436,16 @@
             if (currentModule === 'finger') return;
             currentModule = 'finger';
             beginModule('finger', 'Finger Counting');
+            lastFingerTotal = -1;
             await startCamera();
-            document.querySelector('.finger-count-feedback').style.display = 'block';
-            
-            // Preload audio files (now up to 10)
-            for (let i = 0; i <= 10; i++) {
-                const audio = new Audio(`/static/audio/numbers/${i}.mp3`);
-                audio.load();
-            }
-            
+            feedbackContainer.style.display = 'block';
+            const emotionFb = document.querySelector('.emotion-feedback');
+            const questionBox = document.querySelector('.question-container');
+            if (emotionFb) emotionFb.style.display = 'none';
+            if (questionBox) questionBox.style.display = 'none';
+            const fingerFb = document.querySelector('.finger-count-feedback');
+            fingerFb.style.display = 'block';
+            updateFingerCountFeedback(0, []);
             processFingerCounting();
         }
 

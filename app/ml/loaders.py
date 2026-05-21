@@ -60,7 +60,8 @@ def get_hands_detector():
             _hands_detector = mp.solutions.hands.Hands(
                 static_image_mode=True,
                 max_num_hands=2,
-                min_detection_confidence=0.5,
+                min_detection_confidence=0.4,
+                min_tracking_confidence=0.4,
             )
         except Exception as e:
             logger.error('MediaPipe Hands init failed: %s', e)
