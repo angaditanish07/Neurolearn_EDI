@@ -77,6 +77,8 @@ SESSION_COOKIE_SECURE=1
 
 **Note:** Camera/mic on Render HTTPS works on the public URL; students use that link, not `192.168.x.x`.
 
+**Build error `flask-session` vs `flask==2.0.3`:** fixed in `requirements.txt` (Flask 2.3.3 + Werkzeug 2.3.7). Push and redeploy.
+
 ---
 
 ## Option C — Oracle Cloud free VM (best for full ML, $0)
