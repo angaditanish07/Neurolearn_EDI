@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroLearn - Inclusive Education Platform 🧠</title>
+    <link href="https://fonts.cdnfonts.com/css/lexend" rel="stylesheet">
+    <!-- OpenDyslexic font for dyslexic-friendly UI -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.0/open-dyslexic.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="brain.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.botpress.cloud/webchat/v2.5/inject.js"></script>
+    <script src="https://files.bpcontent.cloud/2025/05/08/18/20250508183514-V30W3VFU.js"></script>
+    <style>
+:root {
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --background-light: #ffffff;
+    --background-dark: #1a1a1a;
+    --text-light: #1a1a1a;
+    --text-dark: #ffffff;
+    --font-regular: 'Lexend', sans-serif;
+    --font-dyslexic: 'OpenDyslexic', 'Lexend', sans-serif;
+    --spacing-unit: 1rem;
+    --border-radius: 0.75rem;
+    --transition-speed: 0.3s;
+    --primary-gradient: linear-gradient(135deg, #4a2b7b 0%, #7b2b7b 50%, #2b4a7b 100%);
+    --secondary-gradient: linear-gradient(135deg, #2b4a7b 0%, #4a2b7b 50%, #7b2b7b 100%);
+    --accent-gradient: linear-gradient(135deg, #7b2b7b 0%, #2b4a7b 50%, #4a2b7b 100%);
+    --card-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    --glass-effect: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+/* Base styles and CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-regular);
+    line-height: 1.6;
+    background-color: var(--background-light);
+    color: var(--text-light);
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: transparent;
+    overflow-x: hidden;
+}
+
+/* Accessibility Classes */
+.dyslexic-font {
+    font-family: 'OpenDyslexic', 'Lexend', sans-serif !important;
+    letter-spacing: 0.05em;
+    word-spacing: 0.1em;
+}
+
+.high-contrast {
+    --background-light: #000000;
+    --text-light: #ffffff;
+    --primary-color: #ffff00;
+    --secondary-color: #00ffff;
+    background-color: #000 !important;
+    color: #fff !important;
+}
+
+.readable-text {
+    max-width: 70ch;
+    line-height: 1.8;
+}
+
+/* Glassmorphism for cards and modals */
+.section, .stat-card, .achievement, .support-card, .modal-content {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    transition: box-shadow 0.4s, transform 0.4s;
+}
+.section.animate-in, .stat-card.animate-in, .achievement.animate-in, .support-card.animate-in {
+    animation: fadeInUp 1s cubic-bezier(.23,1.01,.32,1) both;
+}
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(40px);}
+    100% { opacity: 1; transform: translateY(0);}
+}
+
+/* Card hover animation */
+.path-card, .stat-card, .achievement, .support-card {
+    padding: 1.25rem;
+    transition: transform 0.3s cubic-bezier(.23,1.01,.32,1), box-shadow 0.3s;
+}
+.path-card:hover, .stat-card:hover, .achievement:hover, .support-card:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-5px);
+}
+
+/* Button animation */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.3s, color 0.3s, transform 0.2s cubic-bezier(.23,1.01,.32,1);
+    position: relative;
+    overflow: hidden;
+}
+.btn:active {
+    transform: scale(0.96);
+}
+.btn::after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 0; height: 0;
+    background: rgba(99,102,241,0.15);
+    border-radius: 100%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+    z-index: 0;
+}
+.btn:active::after {
+    width: 120px; height: 120px;
+}
+.btn-access {
+    background-color: #f3f4f6;
+    color: var(--text-light);
+}
+.btn-purple {
+    background: var(--primary-gradient);
+    color: white;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.btn-yellow {
+    background: var(--accent-gradient);
+    color: white;
+}
+.btn-green {
+    background: var(--secondary-gradient);
+    color: white;
+}
+.btn-text {
+    background: none;
+    color: var(--text-light);
+    padding: 0.5rem;
+}
+
+/* Navigation */
+.nav-bar {
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    border-bottom: 1px solid var(--glass-border);
+    z-index: 1000;
+    padding: 1rem 0;
+    position: relative;
+}
+.nav-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.nav-logo {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+}
+.nav-logo img {
+    width: 50px;
+    height: 50px;
+    display: block;
+}
+.nav-logo-text {
+    margin-left: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #4a2b7b;
+}
+.brain-icon {
+    animation: pulse 2s infinite;
+}
+#logo{
+    width: 50px;
+    height: 50px;
+    display: block;
+}
+.accessibility-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* Main Content */
+.main-content {
+    max-width: 1080px;
+    margin: 1rem auto;
+    padding: 0 1rem;
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+.section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, opacity 0.8s;
+    opacity: 0;
+    transform: translateY(40px);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    margin: 20px;
+    border-radius: 15px;
+}
+.section.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Welcome Section */
+.hero-container {
+    position: relative;
+    margin: 2rem 0;
+}
+.hero-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+}
+.hero-text {
+    position: absolute;
+    bottom: 2rem;
+    left: 2rem;
+    right: 2rem;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+}
+
+/* Learning Paths */
+.paths-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+.path-card {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+.path-card:hover {
+    transform: scale(1.02);
+}
+.progress-bar {
+    height: 0.5rem;
+    background-color: #e5e7eb;
+    border-radius: 1rem;
+    margin-top: 1rem;
+    overflow: hidden;
+}
+.progress {
+    height: 100%;
+    background: var(--primary-gradient);
+    animation: shimmer 2s infinite linear;
+    background-size: 200% 100%;
+    border-radius: 1rem;
+    transition: width 1s ease-in-out;
+}
+
+/* AI Tutor Section */
+.chat-container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-top: 1.5rem;
+}
+.chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    padding: 1rem;
+}
+.tutor-message {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.chat-input {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: #f9fafb;
+}
+.chat-input input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: var(--border-radius);
+    font-family: inherit;
+}
+
+/* Progress Dashboard */
+.progress-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+.stat-card {
+    text-align: center;
+}
+.stat-number {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 2rem;
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+.achievement {
+    text-align: center;
+}
+.achievement-icon {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));
+    transition: transform 0.3s, filter 0.3s;
+}
+.achievement-icon:hover {
+    transform: scale(1.3) rotate(-12deg);
+    filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5));
+}
+
+/* Support Section */
+.support-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+.support-card {
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+.support-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Footer */
+.footer {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    padding: 1.5rem 0;
+    margin-top: 3rem;
+    border-top: 1px solid #e5e7eb;
+}
+.footer-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.footer-links {
+    display: flex;
+    gap: 2rem;
+}
+
+/* AI Assistant Float */
+.ai-assistant {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 100;
+}
+.ai-toggle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s;
+}
+.ai-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* Floating buttons pulse */
+.voice-nav-btn, .face-feature-btn {
+    display: none !important;
+}
+
+/* Progress bar animation */
+.top-progress-bar {
+    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 60%, #e5e7eb 100%);
+    animation: progressBarAnim 2s cubic-bezier(.23,1.01,.32,1);
+    height: 8px;
+    width: 100%;
+}
+@keyframes progressBarAnim {
+    0% { width: 0; }
+    100% { width: 100%; }
+}
+
+/* Section fade-in on scroll */
+.section {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s, transform 0.8s;
+}
+.section.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Icon bounce on hover */
+.icon, .achievement-icon {
+    transition: transform 0.2s;
+}
+.icon:hover, .achievement-icon:hover {
+    transform: scale(1.2) rotate(-8deg);
+}
+
+/* Focus outline for accessibility */
+.btn:focus, .path-card:focus, .support-card:focus {
+    outline: 3px solid #6366f1;
+    outline-offset: 2px;
+}
+
+/* Accessibility Media Queries */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .accessibility-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .hero-text {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        right: auto;
+        margin-top: 1rem;
+    }
+    .footer-content {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    .footer-links {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .video-background {
+        display: none;
+    }
+    body {
+        background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .nav-bar,
+    .accessibility-controls,
+    .ai-assistant,
+    .chat-input,
+    .support-section {
+        display: none;
+    }
+    .section {
+        break-inside: avoid;
+        box-shadow: none;
+    }
+    .hero-image {
+        max-height: 200px;
+    }
+}
+
+/* Video background container */
+.video-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+/* Video element styles */
+.video-background video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+}
+
+/* Make content sections have a semi-transparent background */
+.section {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+}
+
+/* Make navbar semi-transparent */
+.nav-bar {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+}
+
+/* Adjust text sizes for better fit */
+h1 { font-size: 2rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.25rem; }
+
+.voice-controls {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    gap: 1rem;
+    z-index: 1000;
+}
+
+.voice-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease;
+}
+
+.voice-btn:hover {
+    transform: scale(1.1);
+}
+
+.voice-btn.active {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    50% { transform: scale(1.05); box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+    100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+}
+
+.status-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    display: none;
+    z-index: 9999;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-light);
+    font-weight: 500;
+    transition: color 0.3s;
+    position: relative;
+}
+
+.nav-links a:hover {
+    color: var(--primary-color);
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -4px;
+    left: 0;
+    background-color: var(--primary-color);
+    transition: width 0.3s;
+}
+
+.nav-links a:hover::after {
+    width: 100%;
+}
+    </style>
+    <script>
+const state = {
+    fontSize: 16,
+    isDyslexicFont: false,
+    isHighContrast: false,
+    isReadAloudEnabled: false,
+    currentPath: null,
+    userProgress: {
+        streak: 5,
+        lessonsCompleted: 12,
+        skillsMastered: 8
+    },
+    chatHistory: []
+};
+
+function toggleDyslexicFont() {
+    state.isDyslexicFont = !state.isDyslexicFont;
+    document.body.classList.toggle('dyslexic-font');
+    announceChange(`Dyslexic friendly font ${state.isDyslexicFont ? 'enabled' : 'disabled'}`);
+}
+
+function toggleHighContrast() {
+    state.isHighContrast = !state.isHighContrast;
+    document.body.classList.toggle('high-contrast');
+    announceChange(`High contrast mode ${state.isHighContrast ? 'enabled' : 'disabled'}`);
+}
+
+function adjustTextSize(delta) {
+    const minSize = 12;
+    const maxSize = 24;
+    state.fontSize = Math.max(minSize, Math.min(maxSize, state.fontSize + delta));
+    document.documentElement.style.fontSize = `${state.fontSize}px`;
+    announceChange(`Text size adjusted to ${state.fontSize}px`);
+}
+
+function toggleBackground() {
+    const body = document.body;
+    if (body.style.backgroundColor === 'rgb(255, 251, 235)') {
+        body.style.backgroundColor = '#fff';
+    } else if (body.style.backgroundColor === 'rgb(26, 26, 26)') {
+        body.style.backgroundColor = '#fffbeb'; // Sepia
+    } else {
+        body.style.backgroundColor = '#1a1a1a'; // Dark
+    }
+}
+
+function startLearningPath(pathType) {
+    state.currentPath = pathType;
+    const pathMessages = {
+        visual: "Welcome to Visual Learning! Let's explore through images and diagrams.",
+        audio: "Welcome to Audio Learning! Let's learn through sound and speech.",
+        interactive: "Welcome to Interactive Learning! Let's learn through games and activities."
+    };
+    announceChange(pathMessages[pathType]);
+    updateUI();
+}
+
+function addMessageToChat(sender, message) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `${sender}-message`;
+    const icon = sender === 'tutor' ? '🤖' : '👤';
+    messageDiv.innerHTML = `
+        <span class="icon">${icon}</span>
+        <p>${message}</p>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    if (state.isReadAloudEnabled && sender === 'tutor') {
+        speakText(message);
+    }
+}
+
+function generateAIResponse(message) {
+    const responses = {
+        hello: "Hi there! How can I help you with your learning today?",
+        help: "I can help you with your lessons, explain concepts, or guide you through exercises. What would you like to work on?",
+        default: "That's interesting! Would you like to explore this topic further?"
+    };
+    const lowercaseMessage = message.toLowerCase();
+    for (const [key, response] of Object.entries(responses)) {
+        if (lowercaseMessage.includes(key)) {
+            return response;
+        }
+    }
+    return responses.default;
+}
+
+// Voice Input
+function startVoiceInput() {
+    if (!('webkitSpeechRecognition' in window)) {
+        announceChange("Sorry, voice input is not supported in your browser");
+        return;
+    }
+    const recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onstart = () => {
+        announceChange("Listening...");
+        document.querySelector('.btn-green').classList.add('listening');
+    };
+    recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        document.getElementById('user-input').value = text;
+    };
+    recognition.onend = () => {
+        document.querySelector('.btn-green').classList.remove('listening');
+        announceChange("Listening ended");
+    };
+    recognition.start();
+}
+
+function updateProgress(type, value) {
+    state.userProgress[type] = value;
+    updateUI();
+}
+
+function openTutorial() {
+    announceChange("Opening tutorial...");
+}
+function contactTeacher() {
+    announceChange("Opening teacher contact form...");
+}
+function openParentDashboard() {
+    announceChange("Opening parent dashboard...");
+}
+
+function announceChange(message) {
+    const announcement = document.createElement('div');
+    announcement.setAttribute('role', 'alert');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.className = 'sr-only';
+    announcement.textContent = message;
+    document.body.appendChild(announcement);
+    setTimeout(() => announcement.remove(), 1000);
+}
+
+function updateUI() {
+    document.querySelectorAll('.progress').forEach(bar => {
+        const width = bar.getAttribute('data-progress');
+        bar.style.width = `${width}%`;
+    });
+    document.querySelector('.stat-number').textContent = `${state.userProgress.streak} Days 🔥`;
+}
+
+function showVoiceModal() {
+    document.getElementById('voice-modal').style.display = 'flex';
+}
+function hideVoiceModal() {
+    document.getElementById('voice-modal').style.display = 'none';
+}
+function showFaceModal() {
+    document.getElementById('face-modal').style.display = 'flex';
+}
+function hideFaceModal() {
+    document.getElementById('face-modal').style.display = 'none';
+}
+function readSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section) {
+        speakText(section.innerText);
+    }
+}
+function markChallengeDone() {
+    alert('Great job! You completed today\'s challenge!');
+}
+function startFaceDetection() {
+    alert('Face detection feature coming soon!');
+}
+
+// Animate sections on scroll
+document.addEventListener('DOMContentLoaded', () => {
+    updateUI();
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            window.speechSynthesis.cancel();
+        }
+    });
+    // Section fade-in
+    const sections = document.querySelectorAll('.section');
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        },
+        { threshold: 0.15 }
+    );
+    sections.forEach(section => observer.observe(section));
+    // Animate cards on load
+    document.querySelectorAll('.stat-card, .achievement, .support-card').forEach(card => {
+        card.classList.add('animate-in');
+    });
+});
+
+// Service worker for offline support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+            console.log('ServiceWorker registration successful');
+        }).catch(err => {
+            console.log('ServiceWorker registration failed:', err);
+        });
+    });
+}
+
+function updateGradients() {
+    const time = Date.now() * 0.001;
+    const hue = (time * 10) % 360;
+    
+    document.documentElement.style.setProperty(
+        '--primary-gradient',
+        `linear-gradient(135deg, 
+            hsl(${hue}, 80%, 60%) 0%,
+            hsl(${(hue + 60) % 360}, 80%, 60%) 50%,
+            hsl(${(hue + 120) % 360}, 80%, 60%) 100%)`
+    );
+}
+
+// Add subtle gradient animation
+if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    setInterval(updateGradients, 100);
+}
+
+// Video background handling
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.querySelector('.video-background video');
+    
+    // Function to handle video playback
+    function handleVideo() {
+        video.play().catch(function(error) {
+            console.error('Video playback failed:', error);
+        });
+    }
+    
+    // Play video when loaded
+    video.addEventListener('loadeddata', handleVideo);
+    
+    // Restart video if it ends (backup for loop attribute)
+    video.addEventListener('ended', function() {
+        video.currentTime = 0;
+        handleVideo();
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        // Ensure video covers the screen after resize
+        video.style.width = window.innerWidth + 'px';
+        video.style.height = window.innerHeight + 'px';
+    });
+    
+    // Initial play
+    handleVideo();
+});
+
+window.addEventListener('load', function() {
+    // Debug logo
+    const logo = document.querySelector('.nav-logo img');
+    console.log('Logo element:', logo);
+    console.log('Logo source:', logo.src);
+    
+    // Debug video
+    const video = document.querySelector('.video-background video');
+    console.log('Video element:', video);
+    console.log('Video source:', video.querySelector('source').src);
+    
+    // Try to play video
+    video.play().catch(function(error) {
+        console.error('Video play failed:', error);
+    });
+});
+
+// Text to Speech Utility
+class SpeechUtility {
+    constructor() {
+        this.synth = window.speechSynthesis;
+        this.voice = null;
+        this.isReading = false;
+        
+        // Initialize voice
+        this.synth.onvoiceschanged = () => {
+            const voices = this.synth.getVoices();
+            this.voice = voices.find(voice => voice.lang === 'en-US') || voices[0];
+        };
+    }
+
+    speak(text, rate = 1) {
+        if (this.isReading) {
+            this.synth.cancel();
+        }
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.voice = this.voice;
+        utterance.rate = rate;
+        utterance.pitch = 1;
+        
+        utterance.onstart = () => {
+            this.isReading = true;
+            document.querySelector('.read-aloud-btn').classList.add('reading');
+        };
+        
+        utterance.onend = () => {
+            this.isReading = false;
+            document.querySelector('.read-aloud-btn').classList.remove('reading');
+        };
+        
+        this.synth.speak(utterance);
+    }
+
+    stop() {
+        this.synth.cancel();
+        this.isReading = false;
+    }
+}
+
+// Voice Navigation Utility
+class VoiceNavigation {
+    constructor() {
+        this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        this.recognition.continuous = false;
+        this.recognition.lang = 'en-US';
+        this.isListening = false;
+        
+        this.commands = {
+            'read': () => readCurrentSection(),
+            'stop reading': () => speechUtil.stop(),
+            'go to home': () => scrollToSection('welcome'),
+            'show progress': () => scrollToSection('progress'),
+            'show learning paths': () => scrollToSection('learning-paths'),
+            'go to learning paths': () => scrollToSection('learning-paths'),
+            'go to dyslexia test': () => window.location.href = '/dyslexia_screening',
+            'dyslexia test': () => window.location.href = '/dyslexia_screening',
+            'go to interactive learning': () => window.location.href = '/interactive_learning',
+            'interactive learning': () => window.location.href = '/interactive_learning',
+            'increase font': () => adjustTextSize(2),
+            'decrease font': () => adjustTextSize(-2),
+            'enable dyslexic font': () => toggleDyslexicFont(),
+            'high contrast': () => toggleHighContrast()
+        };
+        
+        this.setupRecognition();
+    }
+
+    setupRecognition() {
+        this.recognition.onstart = () => {
+            this.isListening = true;
+            document.querySelector('.voice-nav-btn').classList.add('listening');
+            speechUtil.speak('Listening...');
+        };
+
+        this.recognition.onresult = (event) => {
+            const command = event.results[0][0].transcript.toLowerCase();
+            console.log('Voice command:', command);
+            
+            for (let phrase in this.commands) {
+                if (command.includes(phrase)) {
+                    this.commands[phrase]();
+                    break;
+                }
+            }
+        };
+
+        this.recognition.onend = () => {
+            this.isListening = false;
+            document.querySelector('.voice-nav-btn').classList.remove('listening');
+        };
+    }
+
+    start() {
+        if (!this.isListening) {
+            this.recognition.start();
+        }
+    }
+
+    stop() {
+        if (this.isListening) {
+            this.recognition.stop();
+        }
+    }
+}
+
+// Initialize utilities
+const speechUtil = new SpeechUtility();
+const voiceNav = new VoiceNavigation();
+
+// Function to read current section
+function readCurrentSection() {
+    const sections = document.querySelectorAll('.section');
+    let currentSection = null;
+    
+    sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) {
+            currentSection = section;
+        }
+    });
+    
+    if (currentSection) {
+        const text = currentSection.textContent.replace(/\s+/g, ' ').trim();
+        speechUtil.speak(text);
+    }
+}
+
+// Function to scroll to section
+function scrollToSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+        speechUtil.speak('Navigating to ' + sectionId.replace('-', ' '));
+    }
+}
+
+// Add floating controls for voice features
+document.body.insertAdjacentHTML('beforeend', `
+    <div class="voice-controls" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+    ">
+        <button class="voice-nav-btn" onclick="voiceNav.start()" style="
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary-gradient);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        ">
+            🎤
+        </button>
+        <button id="readAloudBtn" class="voice-btn" title="Read Aloud">
+            &#x1F50A;
+        </button>
+    </div>
+`);
+
+// Add styles for active states
+document.head.insertAdjacentHTML('beforeend', `
+    <style>
+        .voice-nav-btn.listening {
+            animation: pulse 1.5s infinite;
+        }
+        
+        .read-aloud-btn.reading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .voice-nav-btn:hover, .read-aloud-btn:hover {
+            transform: scale(1.1);
+            transition: transform 0.2s ease;
+        }
+    </style>
+`);
+
+// Stop reading when navigating away
+window.addEventListener('beforeunload', () => {
+    speechUtil.stop();
+});
+
+// Initialize speech synthesis
+window.addEventListener('load', () => {
+    if ('speechSynthesis' in window) {
+        speechUtil.synth.onvoiceschanged();
+    } else {
+        console.error('Text-to-speech not supported');
+    }
+});
+
+// Add helper functions for direct navigation 
+function goToDyslexiaTest() {
+    window.location.href = '/dyslexia_screening';
+}
+
+function goToInteractiveLearning() {
+    console.log('Navigating to interactive learning page');
+    this.showStatus('Going to interactive learning');
+    window.location.href = '/interactive_learning';
+}
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/speech-synthesis-polyfill/0.1.0/speech-synthesis-polyfill.min.js"></script>
+</head>
+<body>
+    <div class="video-background">
+        <video autoplay muted loop playsinline>
+            <source src="static/background.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="static/brain.png" alt="Brain Logo" class="brain-icon">
+                <span class="nav-logo-text">NeuroLearn</span>
+            </div>
+            <div class="nav-links">
+                <!-- Removed dyslexia screening link from navbar -->
+            </div>
+            <div class="accessibility-controls">
+                <button onclick="toggleDyslexicFont()" class="btn btn-access" aria-label="Toggle Dyslexic-friendly font">
+                    <span class="icon">📝</span> Dyslexic Font
+                </button>
+                <button onclick="toggleHighContrast()" class="btn btn-access" aria-label="Toggle high contrast">
+                    <span class="icon">👁️</span> High Contrast
+                </button>
+                <button onclick="adjustTextSize(2)" class="btn btn-yellow" aria-label="Increase text size">
+                    <span class="icon">🔍</span> Bigger
+                </button>
+                <button onclick="adjustTextSize(-2)" class="btn btn-yellow" aria-label="Decrease text size">
+                    <span class="icon">🔍</span> Smaller
+                </button>
+                <button onclick="toggleReadAloud()" class="btn btn-purple" aria-label="Toggle read aloud">
+                    <span class="icon">🔊</span> Read Aloud
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Top progress bar -->
+    <div class="top-progress-bar"></div>
+
+    <main class="main-content" role="main">
+        <section id="welcome" class="section welcome-section">
+            <button onclick="readSection('welcome')" class="btn btn-purple" style="float:right; margin-bottom: 1rem;">🔊 Read Aloud</button>
+            <h1><span class="icon">🌟</span> Welcome to NeuroLearn!</h1>
+            <div class="hero-container">
+                <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1000&q=80" 
+                     alt="Diverse group of students learning together"
+                     class="hero-image">
+                <div class="hero-text">
+                    <p class="readable-text">Your personalized learning journey begins here! Choose your path and learn at your own pace.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="learning-paths" class="section paths-section">
+            <button onclick="readSection('learning-paths')" class="btn btn-purple" style="float:right; margin-bottom: 1rem;">🔊 Read Aloud</button>
+            <h2><span class="icon">🎯</span> Your Learning Paths</h2>
+            <div class="paths-grid">
+                <div class="path-card" onclick="startLearningPath('visual')">
+                    <a href="/interactive_learning">
+                    <h3>Start Interactive Learning</h3>
+                    <p>Learn through images, diagrams, and visual stories 🎨</p></a>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 60%"></div>
+                    </div>
+                </div>
+                <div class="path-card" onclick="window.location.href='/dyslexia_screening'">
+                    <h3>Dyslexia Screening Test</h3>
+                    <p>Take the test to assess reading abilities 📝</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 45%"></div>
+                    </div>
+                </div>
+                <div class="path-card" onclick="startLearningPath('interactive')">
+                    <h3>Interactive Games</h3>
+                    <p>Learn through fun and engaging activities 🎮</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 30%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="progress" class="section progress-section">
+            <button onclick="readSection('progress')" class="btn btn-purple" style="float:right; margin-bottom: 1rem;">🔊 Read Aloud</button>
+            <h2><span class="icon">📊</span> Your Progress</h2>
+            <div class="progress-dashboard">
+                <div class="stat-card">
+                    <h3>Daily Streak</h3>
+                    <p class="stat-number">5 Days 🔥</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Lessons Completed</h3>
+                    <p class="stat-number">12 📚</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Skills Mastered</h3>
+                    <p class="stat-number">8 ⭐</p>
+                </div>
+                <!-- Daily Challenge Card -->
+                <div class="stat-card" style="background:#fef9c3;">
+                  <h3>Daily Challenge</h3>
+                  <p>Count 10 objects in your room and say them aloud!</p>
+                  <button class="btn btn-yellow" onclick="markChallengeDone()">Done!</button>
+                </div>
+            </div>
+            <div class="achievement-gallery">
+                <h3>Recent Achievements</h3>
+                <div class="achievements-grid">
+                    <div class="achievement">
+                        <span class="achievement-icon">🏆</span>
+                        <p>Math Master</p>
+                    </div>
+                    <div class="achievement">
+                        <span class="achievement-icon">🎨</span>
+                        <p>Creative Writer</p>
+                    </div>
+                    <div class="achievement">
+                        <span class="achievement-icon">🔬</span>
+                        <p>Science Explorer</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="support" class="section support-section">
+            <button onclick="readSection('support')" class="btn btn-purple" style="float:right; margin-bottom: 1rem;">🔊 Read Aloud</button>
+            <h2><span class="icon">💡</span> Learning Support</h2>
+            <div class="support-grid">
+                <button onclick="openTutorial()" class="support-card">
+                    <span class="icon">📖</span>
+                    <h3>How to Use NeuroLearn</h3>
+                    <p>Watch a guided tour of all features</p>
+                </button>
+                <button onclick="contactTeacher()" class="support-card">
+                    <span class="icon">👩‍🏫</span>
+                    <h3>Talk to Teacher</h3>
+                    <p>Get help from your educator</p>
+                </button>
+                <button onclick="openParentDashboard()" class="support-card">
+                    <span class="icon">👪</span>
+                    <h3>Parent Dashboard</h3>
+                    <p>Track and support progress</p>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>NeuroLearn - Empowering Every Learner 🌈</p>
+            <div class="footer-links">
+                <button onclick="openAccessibilitySettings()" class="btn btn-text">Accessibility</button>
+                <button onclick="openHelp()" class="btn btn-text">Help Center</button>
+                <button onclick="provideFeedback()" class="btn btn-text">Feedback</button>
+            </div>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+    <div class="voice-controls">
+        <button id="voiceNavBtn" class="voice-btn" title="Voice Navigation">
+            🎤
+        </button>
+        <button id="readAloudBtn" class="voice-btn" title="Read Aloud">
+            &#x1F50A;
+        </button>
+        <!-- Add custom chat button -->
+        <button id="chatBtn" class="voice-btn" style="background: linear-gradient(135deg, #3498db, #8e44ad);" title="Chat with us">
+            💬
+        </button>
+    </div>
+
+    <div class="status-indicator"></div>
+  
+    <!-- Botpress Chat Widget -->
+    <script src="https://cdn.botpress.cloud/webchat/v2.5/inject.js"></script>
+    <script src="https://files.bpcontent.cloud/2025/05/08/18/20250508183514-V30W3VFU.js"></script>
+    
+    <script>
+    // Voice Feature Implementation
+    class VoiceFeatures {
+        constructor() {
+            this.synthesis = window.speechSynthesis;
+            this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            this.isListening = false;
+            this.isReading = false;
+            
+            this.setupRecognition();
+            this.setupButtons();
+        }
+
+        setupRecognition() {
+            this.recognition.continuous = false;
+            this.recognition.interimResults = false;
+            this.recognition.lang = 'en-US';
+
+            this.recognition.onstart = () => {
+                this.isListening = true;
+                this.showStatus('Listening...');
+                $('#voiceNavBtn').addClass('active');
+            };
+
+            this.recognition.onend = () => {
+                this.isListening = false;
+                this.hideStatus();
+                $('#voiceNavBtn').removeClass('active');
+            };
+
+            this.recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                this.showStatus('Error: ' + event.error);
+                this.isListening = false;
+                $('#voiceNavBtn').removeClass('active');
+            };
+
+            this.recognition.onresult = (event) => {
+                const command = event.results[0][0].transcript.toLowerCase();
+                console.log('Command received:', command);
+                this.processCommand(command);
+            };
+        }
+
+        setupButtons() {
+            $('#voiceNavBtn').on('click', () => this.toggleVoiceRecognition());
+            $('#readAloudBtn').on('click', () => this.readCurrentSection());
+            $('#chatBtn').on('click', () => {
+                window.botpressWebChat.sendEvent({ type: 'show' });
+            });
+        }
+
+        toggleVoiceRecognition() {
+            if (this.isListening) {
+                this.recognition.stop();
+            } else {
+                try {
+                    this.recognition.start();
+                } catch (error) {
+                    console.error('Recognition start error:', error);
+                    this.showStatus('Error starting voice recognition');
+                }
+            }
+        }
+
+        processCommand(command) {
+            console.log('Processing command:', command);
+            
+            // First, check for exact matches
+            if (command === 'show learning paths' || command === 'learning paths') {
+                console.log('Learning paths exact match detected');
+                this.scrollToSection('learning-paths');
+                this.showStatus('Navigating to learning paths');
+                return;
+            }
+            
+            // Special case for interactive learning due to voice recognition issues
+            if (command.includes('interactive') && (command.includes('learning') || command.includes('learn'))) {
+                console.log('Interactive learning detected');
+                this.goToInteractiveLearning();
+                return;
+            }
+            
+            const commands = {
+                'read this': () => this.readCurrentSection(),
+                'stop reading': () => this.stopReading(),
+                'go home': () => this.scrollToSection('welcome'),
+                'show progress': () => this.scrollToSection('progress'),
+                'learning paths': () => this.scrollToSection('learning-paths'),
+                'show learning path': () => this.scrollToSection('learning-paths'),
+                'learning path': () => this.scrollToSection('learning-paths'),
+                'go to learning paths': () => this.scrollToSection('learning-paths'),
+                'learning': () => this.scrollToSection('learning-paths'),
+                'go to dyslexia test': () => this.goToDyslexiaTest(),
+                'dyslexia test': () => this.goToDyslexiaTest(),
+                'go to interactive learning': () => this.goToInteractiveLearning(),
+                'interactive learning': () => this.goToInteractiveLearning(),
+                'bigger text': () => this.adjustTextSize(2),
+                'smaller text': () => this.adjustTextSize(-2)
+            };
+
+            for (let phrase in commands) {
+                if (command.includes(phrase)) {
+                    console.log('Command match found:', phrase);
+                    commands[phrase]();
+                    this.showStatus('Command: ' + phrase);
+                    break;
+                }
+            }
+        }
+
+        readCurrentSection() {
+            if (this.isReading) {
+                this.stopReading();
+                return;
+            }
+
+            const currentSection = this.getCurrentSection();
+            if (currentSection) {
+                const text = currentSection.textContent.replace(/\s+/g, ' ').trim();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+
+                utterance.onstart = () => {
+                    this.isReading = true;
+                    $('#readAloudBtn').addClass('active');
+                    this.showStatus('Reading...');
+                };
+
+                utterance.onend = () => {
+                    this.isReading = false;
+                    $('#readAloudBtn').removeClass('active');
+                    this.hideStatus();
+                };
+
+                utterance.onerror = (event) => {
+                    console.error('Speech synthesis error:', event);
+                    this.isReading = false;
+                    $('#readAloudBtn').removeClass('active');
+                    this.showStatus('Error reading text');
+                };
+
+                this.synthesis.speak(utterance);
+            }
+        }
+
+        stopReading() {
+            this.synthesis.cancel();
+            this.isReading = false;
+            $('#readAloudBtn').removeClass('active');
+            this.hideStatus();
+        }
+
+        getCurrentSection() {
+            const sections = document.querySelectorAll('.section');
+            for (let section of sections) {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) {
+                    return section;
+                }
+            }
+            return null;
+        }
+
+        scrollToSection(sectionId) {
+            console.log('Scrolling to section:', sectionId);
+            const section = document.getElementById(sectionId);
+            console.log('Found section:', section);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+                this.showStatus('Navigating to ' + sectionId.replace('-', ' '));
+            } else {
+                console.error('Section not found:', sectionId);
+                this.showStatus('Error: Section not found');
+            }
+        }
+
+        showStatus(message) {
+            $('.status-indicator').text(message).fadeIn(200);
+            setTimeout(() => this.hideStatus(), 3000);
+        }
+
+        hideStatus() {
+            $('.status-indicator').fadeOut(200);
+        }
+
+        adjustTextSize(delta) {
+            const minSize = 12;
+            const maxSize = 24;
+            state.fontSize = Math.max(minSize, Math.min(maxSize, state.fontSize + delta));
+            document.documentElement.style.fontSize = `${state.fontSize}px`;
+            this.showStatus(`Text size adjusted to ${state.fontSize}px`);
+        }
+
+        goToDyslexiaTest() {
+            window.location.href = '/dyslexia_screening';
+        }
+
+        goToInteractiveLearning() {
+            console.log('Navigating to interactive learning page');
+            this.showStatus('Going to interactive learning');
+            window.location.href = '/interactive_learning';
+        }
+    }
+
+    // Initialize voice features when document is ready
+    $(document).ready(() => {
+        // Check browser support
+        if (!('speechSynthesis' in window)) {
+            console.error('Text-to-speech not supported');
+            $('#readAloudBtn').prop('disabled', true).css('opacity', 0.5);
+        }
+        
+        if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+            console.error('Speech recognition not supported');
+            $('#voiceNavBtn').prop('disabled', true).css('opacity', 0.5);
+        }
+        
+        // Initialize if supported
+        if (('speechSynthesis' in window) || ('SpeechRecognition' in window) || ('webkitSpeechRecognition' in window)) {
+            window.voiceFeatures = new VoiceFeatures();
+        }
+
+        // Initialize Botpress with a slight delay to ensure everything else is loaded
+        setTimeout(() => {
+            try {
+                window.botpressWebChat.init({
+                    // The configuration is already in the injected script
+                });
+            } catch (e) {
+                console.error('Error initializing Botpress:', e);
+            }
+        }, 1000);
+    });
+    </script>
+</body>
+</html>

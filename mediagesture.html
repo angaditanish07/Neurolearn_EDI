@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NeuroLearn Gesture Video Controller</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial;
+      background-color: #f5f5f5;
+    }
+    video#mainVideo {
+      width: 80%;
+      margin-top: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    #webcam {
+      margin-top: 20px;
+      border: 3px solid #999;
+      border-radius: 10px;
+      transform: scaleX(-1); /* mirror effect */
+    }
+    #status {
+      margin-top: 15px;
+      font-size: 1.2em;
+      color: #333;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>🖐 NeuroLearn: Gesture-Controlled Video</h2>
+
+  <video id="mainVideo" controls>
+    <source src="static/videog.mp4 " type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <video id="webcam" autoplay playsinline width="300" height="200"></video>
+
+  <p id="status">Loading...</p>
+
+  <!-- MediaPipe and Camera Utils -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.min.js"></script>
+
+  <script>
+    const videoElement = document.getElementById('mainVideo');
+    const statusEl = document.getElementById('status');
+
+    let lastGesture = '';
+    let lastGestureTime = 0;
+    let lastX = null;
+    let lastXTime = 0;
+
+    function getGesture(landmarks) {
+      const tips = [8, 12, 16, 20];
+      const extended = tips.map(i => landmarks[i].y < landmarks[i - 2].y ? 1 : 0);
+
+      const thumbUp = landmarks[4].y < landmarks[3].y;
+      const thumbDown = landmarks[4].y > landmarks[3].y;
+
+      if (extended.every(f => f === 1)) return "play_pause";
+      if (thumbUp && extended.every(f => f === 0)) return "volume_up";
+      if (thumbDown && extended.every(f => f === 0)) return "volume_down";
+
+      return null;
+    }
+
+    function handleGesture(gesture) {
+      const now = Date.now();
+      if (gesture === lastGesture && now - lastGestureTime < 2000) return;
+      lastGesture = gesture;
+      lastGestureTime = now;
+
+      switch (gesture) {
+        case 'play_pause':
+          videoElement.paused ? videoElement.play() : videoElement.pause();
+          statusEl.innerText = "Gesture: Play/Pause ⏯️";
+          break;
+        case 'volume_up':
+          videoElement.volume = Math.min(videoElement.volume + 0.1, 1);
+          statusEl.innerText = "Gesture: Volume Up 🔊";
+          break;
+        case 'volume_down':
+          videoElement.volume = Math.max(videoElement.volume - 0.1, 0);
+          statusEl.innerText = "Gesture: Volume Down 🔉";
+          break;
+      }
+    }
+
+    function detectSwipe(x) {
+      const now = Date.now();
+      if (lastX !== null && now - lastXTime < 500) {
+        const deltaX = x - lastX;
+        if (Math.abs(deltaX) > 0.15) {
+          lastX = null;
+          if (deltaX > 0) {
+            videoElement.currentTime += 10;
+            statusEl.innerText = "Gesture: Forward 10s ⏩";
+          } else {
+            videoElement.currentTime -= 10;
+            statusEl.innerText = "Gesture: Rewind 10s ⏪";
+          }
+        }
+      } else {
+        lastX = x;
+        lastXTime = now;
+      }
+    }
+
+    const hands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.6
+    });
+
+    hands.onResults(results => {
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const hand = results.multiHandLandmarks[0];
+        const gesture = getGesture(hand);
+        if (gesture) handleGesture(gesture);
+        detectSwipe(hand[0].x); // Wrist x-position
+      }
+    });
+
+    const webcam = document.getElementById('webcam');
+    const camera = new Camera(webcam, {
+      onFrame: async () => await hands.send({ image: webcam }),
+      width: 300,
+      height: 200
+    });
+    camera.start();
+
+    statusEl.innerText = "Webcam Ready – Start Gesturing!";
+  </script>
+</body>
+</html>
+

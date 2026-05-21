@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Learning - NeuroLearn</title>
+    <link href="https://fonts.cdnfonts.com/css/lexend" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.0/open-dyslexic.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1, #a855f7);
+            --secondary-gradient: linear-gradient(135deg, #14b8a6, #0ea5e9);
+            --accent-gradient: linear-gradient(135deg, #f59e0b, #ef4444);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Lexend', sans-serif;
+            background: transparent;
+        }
+
+        /* Video background container */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Video element styles */
+        .video-background video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .module-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .module-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+
+        .module-description {
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            display: none;
+            position: relative;
+            aspect-ratio: 16/9;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .organ-labels {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .organ-label {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translate(-50%, -50%);
+        }
+
+        .organ-text {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 5px;
+            white-space: nowrap;
+        }
+
+        .organ-point {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 5px;
+        }
+
+        .organ-arrow {
+            position: absolute;
+            pointer-events: none;
+            border: none;
+            height: 2px;
+            background-color: currentColor;
+            transform-origin: left center;
+        }
+
+        .organ-arrow::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: -4px;
+            width: 8px;
+            height: 8px;
+            border-top: 2px solid currentColor;
+            border-right: 2px solid currentColor;
+            transform: rotate(45deg);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-gradient);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .feedback-container {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            display: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .emotion-feedback {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+            text-align: center;
+        }
+
+        .question-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(248, 250, 252, 0.9);
+            backdrop-filter: blur(3px);
+            border-radius: 8px;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: #2d3748;
+            z-index: 20;
+        }
+
+        .back-btn:hover {
+            background: #f8fafc;
+        }
+
+        .finger-count-feedback {
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            text-align: center;
+            color: #2d3748;
+            display: none;
+        }
+
+        .number-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .number-visual {
+            width: 200px;
+            height: 200px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        .finger-dots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            justify-content: center;
+            max-width: 400px;
+        }
+
+        .finger-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #6366f1;
+            transition: transform 0.3s ease;
+        }
+
+        .finger-dot.active {
+            transform: scale(1.2);
+            background: #4f46e5;
+        }
+
+        .hand-indicator {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: #4f46e5;
+        }
+
+        .hand-count {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .hand-icon {
+            font-size: 1.5rem;
+        }
+
+        .feedback-text {
+            font-size: 1.5rem;
+            color: #4f46e5;
+            margin: 1rem 0;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--primary-gradient);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .drawing-container {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .drawing-controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            margin: 10% auto;
+            padding: 2rem;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .game-card {
+            background: var(--primary-gradient);
+            padding: 1.5rem;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Game Content Styles */
+        .game-content {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-area {
+            margin-top: 1.5rem;
+        }
+
+        /* Word Scramble Styles */
+        .scrambled-word {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(243, 244, 246, 0.9);
+            backdrop-filter: blur(3px);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* Math Challenge Styles */
+        .math-problem {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(243, 244, 246, 0.9);
+            backdrop-filter: blur(3px);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .number-pad button {
+            padding: 1rem;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: #e5e7eb;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .number-pad button:hover {
+            background: #d1d5db;
+        }
+
+        /* Memory Match Styles */
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 0 auto;
+            max-width: 600px;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            background: #4f46e5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .memory-card:hover {
+            transform: scale(1.05);
+        }
+
+        /* Sentence Builder Styles */
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(243, 244, 246, 0.9);
+            backdrop-filter: blur(3px);
+            border-radius: 8px;
+        }
+
+        .word-item {
+            padding: 0.5rem 1rem;
+            background: #4f46e5;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .word-item:hover {
+            transform: scale(1.05);
+        }
+
+        .sentence-area {
+            min-height: 100px;
+            padding: 1rem;
+            background: rgba(243, 244, 246, 0.9);
+            backdrop-filter: blur(3px);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-background">
+        <video autoplay muted loop playsinline>
+            <source src="static/background.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <a href="/" class="back-btn">
+        ← Back to Home
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <h1>Interactive Learning Modules</h1>
+            <p>Choose a module to start your interactive learning experience!</p>
+        </div>
+
+        <div class="modules-grid">
+            <div class="module-card">
+                <h2 class="module-title">Face Features Learning</h2>
+                <p class="module-description">Learn about different parts of the face with interactive labels that adjust based on your distance from the camera.</p>
+                <button class="btn btn-primary" onclick="startFaceFeatures()">Start Learning</button>
+            </div>
+
+            <div class="module-card">
+                <h2 class="module-title">Emotion Detection & Learning</h2>
+                <p class="module-description">Get personalized learning experience based on your emotional state with adaptive questions and support.</p>
+                <button class="btn btn-primary" onclick="startEmotionDetection()">Start Learning</button>
+            </div>
+
+            <div class="module-card">
+                <h2 class="module-title">Finger Counting</h2>
+                <p class="module-description">Learn to count numbers using your fingers! Show your hand to the camera and follow the instructions.</p>
+                <button class="btn btn-primary" onclick="startFingerCounting()">Start Learning</button>
+            </div>
+
+            <div class="module-card">
+                <h2 class="module-title">Drawing Canvas</h2>
+                <p class="module-description">Express your creativity with our interactive drawing canvas! Practice writing letters and numbers.</p>
+                <button class="btn btn-primary" onclick="startDrawing()">Start Drawing</button>
+            </div>
+
+            <div class="module-card">
+                <h2 class="module-title">Educational Games</h2>
+                <p class="module-description">Fun and interactive games to enhance learning! Choose from various educational activities.</p>
+                <button class="btn btn-primary" onclick="showGamesMenu()">Play Games</button>
+            </div>
+        </div>
+
+        <div class="video-container">
+            <video id="videoElement" autoplay playsinline></video>
+            <div class="controls">
+                <button class="btn btn-secondary" onclick="stopCamera()">Stop</button>
+            </div>
+        </div>
+
+        <div class="drawing-container" style="display: none; margin-top: 2rem;">
+            <canvas id="drawingCanvas" width="800" height="600" style="border: 2px solid #000; background: white; border-radius: 8px;"></canvas>
+            <div class="drawing-controls" style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-primary" onclick="clearCanvas()">Clear</button>
+                <button class="btn btn-primary" onclick="changeColor('#000000')">Black</button>
+                <button class="btn btn-primary" onclick="changeColor('#ff0000')">Red</button>
+                <button class="btn btn-primary" onclick="changeColor('#0000ff')">Blue</button>
+                <button class="btn btn-primary" onclick="changeColor('#00ff00')">Green</button>
+                <input type="range" min="1" max="20" value="5" class="slider" id="brushSize" onchange="changeBrushSize(this.value)">
+                <span id="brushSizeValue">5px</span>
+            </div>
+        </div>
+
+        <div class="feedback-container">
+            <div class="emotion-feedback"></div>
+            <div class="question-container"></div>
+            <div class="finger-count-feedback">
+                <div class="number-display">
+                    <div class="number-visual">0</div>
+                    <div class="hand-indicator">
+                        <div class="hand-count">
+                            <span class="hand-icon">👋</span>
+                            <span>Left: <span id="leftHandCount">0</span></span>
+                        </div>
+                        <div class="hand-count">
+                            <span class="hand-icon">👋</span>
+                            <span>Right: <span id="rightHandCount">0</span></span>
+                        </div>
+                    </div>
+                    <div class="finger-dots"></div>
+                </div>
+                <div class="feedback-text"></div>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Games Menu Modal -->
+        <div id="gamesModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeGamesMenu()">&times;</span>
+                <h2>Choose a Game</h2>
+                <div class="games-grid">
+                    <div class="game-card" onclick="startGame('wordScramble')">
+                        <h3>Word Scramble</h3>
+                        <p>Unscramble letters to form words and learn spelling!</p>
+                    </div>
+                    <div class="game-card" onclick="startGame('mathChallenge')">
+                        <h3>Math Challenge</h3>
+                        <p>Solve fun math problems with visual aids!</p>
+                    </div>
+                    <div class="game-card" onclick="startGame('memoryMatch')">
+                        <h3>Memory Match</h3>
+                        <p>Match words with their meanings or pictures!</p>
+                    </div>
+                    <div class="game-card" onclick="startGame('sentenceBuilder')">
+                        <h3>Sentence Builder</h3>
+                        <p>Create sentences by arranging words in the correct order!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Containers -->
+        <div id="gameContainer" style="display: none;">
+            <div id="wordScrambleGame" class="game-content" style="display: none;">
+                <h2>Word Scramble</h2>
+                <div class="game-area">
+                    <div id="scrambledWord" class="scrambled-word"></div>
+                    <input type="text" id="wordInput" placeholder="Type your answer">
+                    <button class="btn btn-primary" onclick="checkWord()">Check</button>
+                    <div id="wordFeedback"></div>
+                </div>
+            </div>
+
+            <div id="mathChallengeGame" class="game-content" style="display: none;">
+                <h2>Math Challenge</h2>
+                <div class="game-area">
+                    <div id="mathProblem" class="math-problem"></div>
+                    <div class="number-pad">
+                        <button onclick="appendNumber('1')">1</button>
+                        <button onclick="appendNumber('2')">2</button>
+                        <button onclick="appendNumber('3')">3</button>
+                        <button onclick="appendNumber('4')">4</button>
+                        <button onclick="appendNumber('5')">5</button>
+                        <button onclick="appendNumber('6')">6</button>
+                        <button onclick="appendNumber('7')">7</button>
+                        <button onclick="appendNumber('8')">8</button>
+                        <button onclick="appendNumber('9')">9</button>
+                        <button onclick="appendNumber('0')">0</button>
+                        <button onclick="clearAnswer()">Clear</button>
+                        <button onclick="checkMathAnswer()">Check</button>
+                    </div>
+                    <div id="mathFeedback"></div>
+                </div>
+            </div>
+
+            <div id="memoryMatchGame" class="game-content" style="display: none;">
+                <h2>Memory Match</h2>
+                <div class="game-area">
+                    <div id="memoryGrid" class="memory-grid"></div>
+                    <div id="memoryFeedback"></div>
+                </div>
+            </div>
+
+            <div id="sentenceBuilderGame" class="game-content" style="display: none;">
+                <h2>Sentence Builder</h2>
+                <div class="game-area">
+                    <div id="wordBank" class="word-bank"></div>
+                    <div id="sentenceArea" class="sentence-area"></div>
+                    <button class="btn btn-primary" onclick="checkSentence()">Check Sentence</button>
+                    <div id="sentenceFeedback"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        // Video background handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.querySelector('.video-background video');
+            
+            // Function to handle video playback
+            function handleVideo() {
+                video.play().catch(function(error) {
+                    console.error('Video playback failed:', error);
+                });
+            }
+            
+            // Play video when loaded
+            video.addEventListener('loadeddata', handleVideo);
+            
+            // Restart video if it ends (backup for loop attribute)
+            video.addEventListener('ended', function() {
+                video.currentTime = 0;
+                handleVideo();
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                // Ensure video covers the screen after resize
+                video.style.width = window.innerWidth + 'px';
+                video.style.height = window.innerHeight + 'px';
+            });
+            
+            // Initial play
+            handleVideo();
+        });
+
+        let currentModule = null;
+        const video = document.getElementById('videoElement');
+        const videoContainer = document.querySelector('.video-container');
+        const feedbackContainer = document.querySelector('.feedback-container');
+        let faceLabelsContainer = null;
+        let isProcessing = false;
+
+        let canvas, ctx;
+        let isDrawing = false;
+        let currentColor = '#000000';
+        let currentBrushSize = 5;
+
+        async function startCamera() {
+            try {
+                console.log('Starting camera...');
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                videoContainer.style.display = 'block';
+                // Wait for video to be ready
+                await new Promise(resolve => video.onloadedmetadata = resolve);
+                console.log('Camera started successfully');
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Could not access camera. Please make sure you have granted camera permissions.');
+            }
+        }
+
+        function stopCamera() {
+            const stream = video.srcObject;
+            if (stream) {
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            videoContainer.style.display = 'none';
+            feedbackContainer.style.display = 'none';
+            if (faceLabelsContainer) {
+                faceLabelsContainer.remove();
+                faceLabelsContainer = null;
+            }
+            currentModule = null;
+        }
+
+        async function captureFrame() {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                console.log('Frame captured successfully');
+                return dataUrl;
+            } catch (error) {
+                console.error('Error capturing frame:', error);
+                throw error;
+            }
+        }
+
+        function createFaceLabelsContainer() {
+            if (!faceLabelsContainer) {
+                faceLabelsContainer = document.createElement('div');
+                faceLabelsContainer.className = 'organ-labels';
+                faceLabelsContainer.style.position = 'absolute';
+                faceLabelsContainer.style.top = '0';
+                faceLabelsContainer.style.left = '0';
+                faceLabelsContainer.style.width = '100%';
+                faceLabelsContainer.style.height = '100%';
+                faceLabelsContainer.style.pointerEvents = 'none';
+                videoContainer.appendChild(faceLabelsContainer);
+            }
+        }
+
+        function updateFaceLabels(faceData) {
+            if (!faceLabelsContainer) return;
+            
+            faceLabelsContainer.innerHTML = '';
+            const colors = {
+                "Left Eye": "#ff0000",
+                "Right Eye": "#00ff00",
+                "Nose": "#0000ff",
+                "Mouth": "#ffff00",
+                "Left Ear": "#ff00ff",
+                "Right Ear": "#00ffff",
+                "Chin": "#c86464"
+            };
+
+            const offsets = {
+                "Left Eye": { x: -120, y: -20 },
+                "Right Eye": { x: 120, y: -20 },
+                "Nose": { x: 0, y: -80 },
+                "Mouth": { x: 0, y: 60 },
+                "Left Ear": { x: -140, y: 0 },
+                "Right Ear": { x: 140, y: 0 },
+                "Chin": { x: 0, y: 100 }
+            };
+
+            faceData.forEach(face => {
+                for (const [organ, position] of Object.entries(face)) {
+                    const labelContainer = document.createElement('div');
+                    labelContainer.className = 'organ-label';
+                    
+                    // Set the base position at the landmark point
+                    labelContainer.style.left = `${position.x}px`;
+                    labelContainer.style.top = `${position.y}px`;
+
+                    // Create text label
+                    const text = document.createElement('div');
+                    text.className = 'organ-text';
+                    text.style.color = colors[organ];
+                    text.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                    text.textContent = organ;
+
+                    // Create point
+                    const point = document.createElement('div');
+                    point.className = 'organ-point';
+                    point.style.backgroundColor = colors[organ];
+                    point.style.width = '6px';
+                    point.style.height = '6px';
+
+                    // Create arrow
+                    const arrow = document.createElement('div');
+                    arrow.className = 'organ-arrow';
+                    arrow.style.backgroundColor = colors[organ];
+
+                    // Calculate arrow position and rotation
+                    const offset = offsets[organ];
+                    const length = Math.sqrt(offset.x * offset.x + offset.y * offset.y);
+                    const angle = Math.atan2(offset.y, offset.x) * (180 / Math.PI);
+
+                    // Position the label container with offset
+                    labelContainer.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
+
+                    // Position and rotate the arrow
+                    arrow.style.width = `${length}px`;
+                    arrow.style.transform = `rotate(${angle}deg)`;
+
+                    // Add elements to container in correct order
+                    labelContainer.appendChild(text);
+                    labelContainer.appendChild(arrow);
+                    labelContainer.appendChild(point);
+                    faceLabelsContainer.appendChild(labelContainer);
+                }
+            });
+        }
+
+        async function processFaceFeatures() {
+            if (currentModule !== 'face' || isProcessing) return;
+            isProcessing = true;
+
+            try {
+                console.log('Processing face features...');
+                const imageData = await captureFrame();
+                const formData = new FormData();
+                formData.append('image', imageData);
+                
+                const response = await fetch('/start_face_features', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                console.log('Face features response:', data);
+                
+                if (data.success && data.face_data) {
+                    updateFaceLabels(data.face_data);
+                } else if (data.error) {
+                    console.error('Face features error:', data.error);
+                    // Clear existing labels if there's an error
+                    if (faceLabelsContainer) {
+                        faceLabelsContainer.innerHTML = '';
+                    }
+                }
+            } catch (error) {
+                console.error('Error detecting face features:', error);
+                // Clear existing labels if there's an error
+                if (faceLabelsContainer) {
+                    faceLabelsContainer.innerHTML = '';
+                }
+            } finally {
+                isProcessing = false;
+                if (currentModule === 'face') {
+                    // Reduce processing frequency to improve performance
+                    setTimeout(() => {
+                        requestAnimationFrame(processFaceFeatures);
+                    }, 100);
+                }
+            }
+        }
+
+        async function processEmotion() {
+            if (currentModule !== 'emotion' || isProcessing) return;
+            isProcessing = true;
+
+            try {
+                console.log('Processing emotion...');
+                const imageData = await captureFrame();
+                const formData = new FormData();
+                formData.append('image', imageData);
+                
+                const response = await fetch('/detect_emotion', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                console.log('Emotion detection response:', data);
+                
+                if (data.emotion) {
+                    updateFeedback(data);
+                } else if (data.error) {
+                    console.error('Emotion detection error:', data.error);
+                }
+            } catch (error) {
+                console.error('Error detecting emotion:', error);
+            } finally {
+                isProcessing = false;
+                if (currentModule === 'emotion') {
+                    setTimeout(processEmotion, 1000);
+                }
+            }
+        }
+
+        async function processFingerCounting() {
+            if (currentModule !== 'finger' || isProcessing) return;
+            isProcessing = true;
+
+            try {
+                console.log('Processing finger counting...');
+                const imageData = await captureFrame();
+                const formData = new FormData();
+                formData.append('image', imageData);
+                
+                const response = await fetch('/count_fingers', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                console.log('Finger counting response:', data);
+                
+                if (data.success) {
+                    updateFingerCountFeedback(data.total_fingers, data.hand_counts);
+                } else if (data.error) {
+                    console.error('Finger counting error:', data.error);
+                    const feedbackContainer = document.querySelector('.finger-count-feedback');
+                    feedbackContainer.innerHTML = 'Show your hand to the camera!';
+                }
+            } catch (error) {
+                console.error('Error detecting fingers:', error);
+            } finally {
+                isProcessing = false;
+                if (currentModule === 'finger') {
+                    setTimeout(() => {
+                        requestAnimationFrame(processFingerCounting);
+                    }, 100);
+                }
+            }
+        }
+
+        function updateFeedback(data) {
+            if (!data.emotion) return;
+            
+            const emotionFeedback = document.querySelector('.emotion-feedback');
+            const questionContainer = document.querySelector('.question-container');
+            
+            emotionFeedback.textContent = `Current Emotion: ${data.emotion}`;
+            questionContainer.innerHTML = `
+                <p><strong>Support Question:</strong> ${data.mood_question}</p>
+                <p><strong>Learning Question:</strong> ${data.academic_question}</p>
+            `;
+        }
+
+        function updateFingerCountFeedback(totalFingers, handCounts) {
+            const feedbackDiv = document.querySelector('.finger-count-feedback');
+            const numberDisplay = feedbackDiv.querySelector('.number-display');
+            const fingerDots = feedbackDiv.querySelector('.finger-dots');
+            const feedbackText = feedbackDiv.querySelector('.feedback-text');
+            const progressBar = feedbackDiv.querySelector('.progress');
+            
+            // Update number display with animation
+            numberDisplay.textContent = totalFingers;
+            numberDisplay.classList.add('bounce');
+            setTimeout(() => numberDisplay.classList.remove('bounce'), 1000);
+            
+            // Update finger dots
+            fingerDots.innerHTML = '';
+            for (let i = 0; i < totalFingers; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'finger-dot';
+                fingerDots.appendChild(dot);
+            }
+            
+            // Update feedback text
+            let feedback = '';
+            if (handCounts.length === 2) {
+                feedback = `Left hand: ${handCounts[0]} fingers, Right hand: ${handCounts[1]} fingers`;
+            } else if (handCounts.length === 1) {
+                feedback = `${handCounts[0]} fingers detected`;
+            } else {
+                feedback = 'Show your hands to the camera';
+            }
+            feedbackText.textContent = feedback;
+            
+            // Update progress bar
+            progressBar.style.width = `${(totalFingers / 10) * 100}%`;
+            
+            // Play audio feedback
+            const audio = new Audio(`/static/audio/numbers/${totalFingers}.mp3`);
+            audio.play().catch(error => console.error('Error playing audio:', error));
+        }
+
+        async function startFaceFeatures() {
+            if (currentModule === 'face') return;
+            currentModule = 'face';
+            await startCamera();
+            createFaceLabelsContainer();
+            processFaceFeatures();
+        }
+
+        async function startEmotionDetection() {
+            if (currentModule === 'emotion') return;
+            currentModule = 'emotion';
+            await startCamera();
+            feedbackContainer.style.display = 'block';
+            processEmotion();
+        }
+
+        async function startFingerCounting() {
+            if (currentModule === 'finger') return;
+            currentModule = 'finger';
+            await startCamera();
+            document.querySelector('.finger-count-feedback').style.display = 'block';
+            
+            // Preload audio files (now up to 10)
+            for (let i = 0; i <= 10; i++) {
+                const audio = new Audio(`/static/audio/numbers/${i}.mp3`);
+                audio.load();
+            }
+            
+            processFingerCounting();
+        }
+
+        function startDrawing() {
+            if (currentModule === 'drawing') return;
+            currentModule = 'drawing';
+            stopCamera();
+            document.querySelector('.drawing-container').style.display = 'block';
+            
+            // Initialize canvas
+            canvas = document.getElementById('drawingCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Set initial styles
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = currentBrushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Add event listeners
+            canvas.addEventListener('mousedown', startDrawingStroke);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawingStroke);
+            canvas.addEventListener('mouseout', stopDrawingStroke);
+            
+            // Add touch support
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawingStroke);
+        }
+
+        function startDrawingStroke(e) {
+            isDrawing = true;
+            const pos = getPosition(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const pos = getPosition(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+
+        function stopDrawingStroke() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        function getPosition(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function changeColor(color) {
+            currentColor = color;
+            ctx.strokeStyle = color;
+        }
+
+        function changeBrushSize(size) {
+            currentBrushSize = size;
+            ctx.lineWidth = size;
+            document.getElementById('brushSizeValue').textContent = size + 'px';
+        }
+
+        // Clean up when leaving the page
+        window.addEventListener('beforeunload', stopCamera);
+
+        // Games Menu Functions
+        function showGamesMenu() {
+            document.getElementById('gamesModal').style.display = 'block';
+        }
+
+        function closeGamesMenu() {
+            document.getElementById('gamesModal').style.display = 'none';
+        }
+
+        function startGame(gameType) {
+            closeGamesMenu();
+            document.getElementById('gameContainer').style.display = 'block';
+            
+            // Hide all games
+            document.querySelectorAll('.game-content').forEach(game => {
+                game.style.display = 'none';
+            });
+            
+            // Show selected game
+            document.getElementById(gameType + 'Game').style.display = 'block';
+            
+            // Initialize the selected game
+            switch(gameType) {
+                case 'wordScramble':
+                    initWordScramble();
+                    break;
+                case 'mathChallenge':
+                    initMathChallenge();
+                    break;
+                case 'memoryMatch':
+                    initMemoryMatch();
+                    break;
+                case 'sentenceBuilder':
+                    initSentenceBuilder();
+                    break;
+            }
+        }
+
+        // Word Scramble Game
+        const words = [
+            { word: 'apple', hint: 'A red fruit' },
+            { word: 'book', hint: 'You read this' },
+            { word: 'cat', hint: 'A furry pet' },
+            { word: 'dog', hint: 'Man\'s best friend' },
+            { word: 'elephant', hint: 'A large animal with a trunk' }
+        ];
+
+        let currentWord = '';
+
+        function initWordScramble() {
+            const randomWord = words[Math.floor(Math.random() * words.length)];
+            currentWord = randomWord.word;
+            const scrambled = scrambleWord(currentWord);
+            document.getElementById('scrambledWord').textContent = scrambled;
+            document.getElementById('wordInput').value = '';
+            document.getElementById('wordFeedback').textContent = '';
+        }
+
+        function scrambleWord(word) {
+            return word.split('').sort(() => Math.random() - 0.5).join('');
+        }
+
+        function checkWord() {
+            const userInput = document.getElementById('wordInput').value.toLowerCase();
+            const feedback = document.getElementById('wordFeedback');
+            
+            if (userInput === currentWord) {
+                feedback.textContent = 'Correct! Well done!';
+                feedback.style.color = 'green';
+                setTimeout(initWordScramble, 2000);
+            } else {
+                feedback.textContent = 'Try again!';
+                feedback.style.color = 'red';
+            }
+        }
+
+        // Math Challenge Game
+        function initMathChallenge() {
+            const num1 = Math.floor(Math.random() * 10) + 1;
+            const num2 = Math.floor(Math.random() * 10) + 1;
+            const operators = ['+', '-', '×'];
+            const operator = operators[Math.floor(Math.random() * operators.length)];
+            
+            let answer;
+            switch(operator) {
+                case '+': answer = num1 + num2; break;
+                case '-': answer = num1 - num2; break;
+                case '×': answer = num1 * num2; break;
+            }
+            
+            document.getElementById('mathProblem').textContent = `${num1} ${operator} ${num2} = ?`;
+            document.getElementById('mathProblem').dataset.answer = answer;
+            document.getElementById('mathFeedback').textContent = '';
+        }
+
+        let currentAnswer = '';
+
+        function appendNumber(num) {
+            currentAnswer += num;
+            document.getElementById('mathProblem').textContent = 
+                document.getElementById('mathProblem').textContent.replace('?', currentAnswer);
+        }
+
+        function clearAnswer() {
+            currentAnswer = '';
+            document.getElementById('mathProblem').textContent = 
+                document.getElementById('mathProblem').textContent.replace(currentAnswer, '?');
+        }
+
+        function checkMathAnswer() {
+            const correctAnswer = document.getElementById('mathProblem').dataset.answer;
+            const feedback = document.getElementById('mathFeedback');
+            
+            if (parseInt(currentAnswer) === parseInt(correctAnswer)) {
+                feedback.textContent = 'Correct! Great job!';
+                feedback.style.color = 'green';
+                setTimeout(initMathChallenge, 2000);
+            } else {
+                feedback.textContent = 'Try again!';
+                feedback.style.color = 'red';
+            }
+            currentAnswer = '';
+        }
+
+        // Memory Match Game
+        const memoryPairs = [
+            { word: 'cat', image: '🐱' },
+            { word: 'dog', image: '🐕' },
+            { word: 'bird', image: '🐦' },
+            { word: 'fish', image: '🐠' },
+            { word: 'rabbit', image: '🐰' },
+            { word: 'tiger', image: '🐯' }
+        ];
+
+        function initMemoryMatch() {
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+            
+            // Create pairs array with both words and images
+            const pairs = [...memoryPairs, ...memoryPairs];
+            // Shuffle the pairs
+            pairs.sort(() => Math.random() - 0.5);
+            
+            pairs.forEach((pair, index) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.index = index;
+                card.dataset.type = pair.word ? 'word' : 'image';
+                card.dataset.value = pair.word || pair.image;
+                card.addEventListener('click', () => flipCard(card));
+                grid.appendChild(card);
+            });
+        }
+
+        let flippedCards = [];
+        let canFlip = true;
+
+        function flipCard(card) {
+            if (!canFlip || flippedCards.includes(card) || card.textContent) return;
+            
+            card.textContent = card.dataset.value;
+            flippedCards.push(card);
+            
+            if (flippedCards.length === 2) {
+                canFlip = false;
+                setTimeout(checkMatch, 1000);
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const match = card1.dataset.value === card2.dataset.value;
+            
+            if (match) {
+                card1.style.background = '#10b981';
+                card2.style.background = '#10b981';
+            } else {
+                card1.textContent = '';
+                card2.textContent = '';
+            }
+            
+            flippedCards = [];
+            canFlip = true;
+            
+            // Check if all cards are matched
+            const allMatched = document.querySelectorAll('.memory-card').length === 
+                document.querySelectorAll('.memory-card[style*="background: rgb(16, 185, 129)"]').length;
+            
+            if (allMatched) {
+                setTimeout(() => {
+                    alert('Congratulations! You matched all pairs!');
+                    initMemoryMatch();
+                }, 500);
+            }
+        }
+
+        // Sentence Builder Game
+        const sentences = [
+            { words: ['The', 'cat', 'sat', 'on', 'the', 'mat'], 
+              correct: 'The cat sat on the mat' },
+            { words: ['I', 'like', 'to', 'read', 'books'], 
+              correct: 'I like to read books' },
+            { words: ['The', 'sun', 'is', 'shining', 'brightly'], 
+              correct: 'The sun is shining brightly' }
+        ];
+
+        let currentSentence = [];
+
+        function initSentenceBuilder() {
+            const sentence = sentences[Math.floor(Math.random() * sentences.length)];
+            currentSentence = [...sentence.words];
+            
+            const wordBank = document.getElementById('wordBank');
+            const sentenceArea = document.getElementById('sentenceArea');
+            
+            wordBank.innerHTML = '';
+            sentenceArea.innerHTML = '';
+            
+            // Shuffle words
+            const shuffledWords = [...sentence.words].sort(() => Math.random() - 0.5);
+            
+            shuffledWords.forEach(word => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'word-item';
+                wordElement.textContent = word;
+                wordElement.addEventListener('click', () => moveWord(wordElement));
+                wordBank.appendChild(wordElement);
+            });
+        }
+
+        function moveWord(wordElement) {
+            const sentenceArea = document.getElementById('sentenceArea');
+            const wordBank = document.getElementById('wordBank');
+            
+            if (wordElement.parentElement === wordBank) {
+                sentenceArea.appendChild(wordElement);
+            } else {
+                wordBank.appendChild(wordElement);
+            }
+        }
+
+        function checkSentence() {
+            const sentenceArea = document.getElementById('sentenceArea');
+            const userSentence = Array.from(sentenceArea.children)
+                .map(word => word.textContent)
+                .join(' ');
+            
+            const feedback = document.getElementById('sentenceFeedback');
+            const correct = userSentence === currentSentence.join(' ');
+            
+            if (correct) {
+                feedback.textContent = 'Correct! Well done!';
+                feedback.style.color = 'green';
+                setTimeout(initSentenceBuilder, 2000);
+            } else {
+                feedback.textContent = 'Try again!';
+                feedback.style.color = 'red';
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+

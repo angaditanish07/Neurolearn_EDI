@@ -1,0 +1,21 @@
+Test Date: 2025-05-03 13:36:15
+Prediction: 2
+
+Features:
+reading_accuracy_1: 0.06818181818181823
+reading_accuracy_2: 0.02777777777777779
+spelling_accuracy_1: 0.0
+spelling_accuracy_2: 0.125
+letter_accuracy_1: 1.0
+letter_accuracy_2: 1.0
+word_matching_accuracy: 0.8
+number_reading_accuracy: 1.0
+sentence_copying_accuracy: 1.0
+letter_size_variation: 0.26003110603506285
+letter_spacing: 0.34298330960948686
+line_spacing: 0.40176764347327043
+pressure_variation: 0.3677391228040917
+slant_angle: 1.9052293349895246
+
+Test Data:
+{'reading': {'test1': {'input': 'fswdfd', 'target': 'The quick brown fox jumps over the lazy dog.'}, 'test2': {'input': 'sgz', 'target': 'She sells seashells by the seashore.'}}, 'spelling': {'test1': {'input': 'dfsgv', 'target': 'elephant'}, 'test2': {'input': 'serger', 'target': 'umbrella'}}, 'letter_recognition': {'test1': {'input': 'b', 'target': 'B'}, 'test2': {'input': 'M', 'target': 'M'}}, 'word_matching': {'input': 'aple', 'target': 'apple'}, 'number_reading': {'input': '4829', 'target': '4829'}, 'sentence_copying': {'input': 'Learning is fun and rewarding.', 'target': 'Learning is fun and rewarding.'}, 'handwriting_features': {'letter_size_variation': 0.26003110603506285, 'letter_spacing': 0.34298330960948686, 'line_spacing': 0.40176764347327043, 'pressure_variation': 0.3677391228040917, 'slant_angle': 1.9052293349895246}}

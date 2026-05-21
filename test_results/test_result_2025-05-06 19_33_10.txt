@@ -1,0 +1,46 @@
+Test Date: 2025-05-06 19:33:10
+Prediction: 1
+Overall Confidence: medium (Score: 0.77)
+
+Confidence Scores by Test Type:
+
+reading:
+  mean_accuracy: 0.11363636363636365
+  std_accuracy: 0
+  confidence_level: low
+
+spelling:
+  mean_accuracy: 1.0
+  std_accuracy: 0.0
+  confidence_level: high
+
+letter_recognition:
+  mean_accuracy: 1.0
+  std_accuracy: 0.0
+  confidence_level: high
+
+word_matching:
+  accuracy: 1.0
+  confidence_level: high
+
+number_reading:
+  accuracy: 1.0
+  confidence_level: high
+
+sentence_copying:
+  accuracy: 0.9666666666666667
+  confidence_level: high
+
+Features:
+reading_accuracy_1: 0.11363636363636365
+reading_accuracy_2: 0
+spelling_accuracy_1: 1.0
+spelling_accuracy_2: 1.0
+letter_accuracy_1: 1.0
+letter_accuracy_2: 1.0
+word_matching_accuracy: 1.0
+number_reading_accuracy: 1.0
+sentence_copying_accuracy: 0.9666666666666667
+
+Test Data:
+{'reading': {'test1': {'input': 'jumps', 'target': 'The quick brown fox jumps over the lazy dog.', 'accuracy': 0.11363636363636365}, 'test2': {'input': '', 'target': 'The cat sits on the mat.', 'accuracy': 0}}, 'spelling': {'test1': {'input': 'elephant', 'target': 'elephant'}, 'test2': {'input': 'umbrella', 'target': 'umbrella'}}, 'letter_recognition': {'test1': {'input': 'p', 'target': 'p'}, 'test2': {'input': 'd', 'target': 'd'}}, 'word_matching': {'input': 'apple', 'target': 'apple'}, 'number_reading': {'input': '4829', 'target': '4829'}, 'sentence_copying': {'input': 'learning is fun and rewarding', 'target': 'Learning is fun and rewarding.'}}

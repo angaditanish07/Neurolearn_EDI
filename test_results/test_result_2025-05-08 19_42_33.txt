@@ -1,0 +1,55 @@
+Test Date: 2025-05-08 19:42:33
+Prediction: 3
+Overall Confidence: low (Score: nan)
+
+Confidence Scores by Test Type:
+
+reading:
+  mean_accuracy: 0.9772727272727273
+  std_accuracy: 0
+  confidence_level: high
+
+spelling:
+  mean_accuracy: 0.0
+  std_accuracy: 0.0
+  confidence_level: low
+
+letter_recognition:
+  mean_accuracy: 0.0
+  std_accuracy: 0.0
+  confidence_level: low
+
+word_matching:
+  accuracy: 0.0
+  confidence_level: low
+
+number_reading:
+  accuracy: 0.0
+  confidence_level: low
+
+sentence_copying:
+  accuracy: 0.0
+  confidence_level: low
+
+handwriting:
+  mean_score: nan
+  confidence_level: low
+
+Features:
+reading_accuracy_1: 0.9772727272727273
+reading_accuracy_2: 0.0
+spelling_accuracy_1: 0.0
+spelling_accuracy_2: 0.0
+letter_accuracy_1: 0.0
+letter_accuracy_2: 0.0
+word_matching_accuracy: 0.0
+number_reading_accuracy: 0.0
+sentence_copying_accuracy: 0.0
+letter_size_variation: 0.2560962273427216
+letter_spacing: 0.0
+line_spacing: 0.48662551440329216
+pressure_variation: nan
+slant_angle: 0.9162954272597758
+
+Test Data:
+{'reading': {'test1': {'input': 'the quick brown fox jumps over the lazy dog', 'target': 'The quick brown fox jumps over the lazy dog.', 'accuracy': 0.9772727272727273}, 'test2': {'input': '', 'target': 'The cat sits on the mat.', 'accuracy': 0}}, 'spelling': {'test1': {'input': '', 'target': 'elephant'}, 'test2': {'input': '', 'target': 'umbrella'}}, 'letter_recognition': {'test1': {'input': '', 'target': 'p'}, 'test2': {'input': '', 'target': 'd'}}, 'word_matching': {'input': '', 'target': 'apple'}, 'number_reading': {'input': '', 'target': '4829'}, 'sentence_copying': {'input': '', 'target': 'Learning is fun and rewarding.'}, 'handwriting_features': {'letter_size_variation': 0.2560962273427216, 'letter_spacing': 0.0, 'line_spacing': 0.48662551440329216, 'pressure_variation': nan, 'slant_angle': 0.9162954272597758}}
