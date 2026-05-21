@@ -79,6 +79,10 @@ SESSION_COOKIE_SECURE=1
 
 **Build error `flask-session` vs `flask==2.0.3`:** fixed in `requirements.txt` (Flask 2.3.3 + Werkzeug 2.3.7). Push and redeploy.
 
+**502 Bad Gateway after “service is live”:** usually the app listened on port `8080` but Render routes to `$PORT` (e.g. `10000`). Fixed via `docker/start.sh` — **remove `PORT=8080` from Render env vars** if you added it; let Render set `PORT` automatically.
+
+**Still 502 after port fix:** open **Logs** (runtime, not build) for `Killed`, `MemoryError`, or MongoDB errors — free tier may run out of RAM loading TensorFlow.
+
 ---
 
 ## Option C — Oracle Cloud free VM (best for full ML, $0)
