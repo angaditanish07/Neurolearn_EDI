@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'includes/head_common.html' %}
     <title>Interactive Learning - NeuroLearn</title>
-    <link href="https://fonts.cdnfonts.com/css/lexend" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.0/open-dyslexic.min.css">
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #6366f1, #a855f7);
@@ -118,50 +115,37 @@
             z-index: 10;
         }
 
-        .organ-label {
+        .organ-point {
             position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #fff;
             transform: translate(-50%, -50%);
+            z-index: 12;
         }
 
         .organ-text {
-            background: rgba(0, 0, 0, 0.7);
+            position: absolute;
+            background: rgba(0, 0, 0, 0.75);
             color: white;
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 14px;
-            margin-bottom: 5px;
+            font-size: 13px;
             white-space: nowrap;
+            transform: translate(-50%, -100%);
+            z-index: 11;
         }
 
-        .organ-point {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-top: 5px;
-        }
-
-        .organ-arrow {
+        .face-arrows-svg {
             position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
-            border: none;
-            height: 2px;
-            background-color: currentColor;
-            transform-origin: left center;
-        }
-
-        .organ-arrow::after {
-            content: '';
-            position: absolute;
-            right: -6px;
-            top: -4px;
-            width: 8px;
-            height: 8px;
-            border-top: 2px solid currentColor;
-            border-right: 2px solid currentColor;
-            transform: rotate(45deg);
+            z-index: 10;
+            overflow: visible;
         }
 
         .controls {
@@ -218,6 +202,135 @@
             background: rgba(248, 250, 252, 0.9);
             backdrop-filter: blur(3px);
             border-radius: 8px;
+        }
+
+        .module-active-bar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+
+        .module-active-bar span {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .btn-close-module {
+            background: #e53e3e;
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-close-module:hover {
+            background: #c53030;
+            transform: scale(1.03);
+        }
+
+        .mcq-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #1a202c;
+        }
+
+        .mcq-difficulty {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .mcq-difficulty.easy {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .mcq-difficulty.hard {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .mcq-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .mcq-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0.75rem;
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+
+        .mcq-option:hover {
+            border-color: #805ad5;
+        }
+
+        .mcq-option input {
+            cursor: pointer;
+        }
+
+        .mcq-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .mcq-feedback {
+            margin-top: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .mcq-feedback.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .mcq-feedback.error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .mcq-feedback.info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .emotion-hint {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        .video-controls-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+            justify-content: center;
         }
 
         .back-btn {
@@ -344,11 +457,67 @@
             margin-top: 2rem;
         }
 
-        .drawing-controls {
-            margin-top: 1rem;
+        .drawing-workspace {
             display: flex;
-            gap: 1rem;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            align-items: flex-start;
             justify-content: center;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .drawing-canvas-wrap {
+            flex: 1 1 520px;
+            min-width: 280px;
+            max-width: 800px;
+        }
+
+        .drawing-canvas-wrap canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 2px solid #1a202c;
+            background: #fff;
+            border-radius: 8px;
+        }
+
+        .drawing-controls {
+            flex: 0 0 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            align-items: stretch;
+        }
+
+        .drawing-controls .btn,
+        .drawing-controls .btn-close-module {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .drawing-controls .brush-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-top: 0.25rem;
+        }
+
+        .drawing-controls .slider {
+            width: 100%;
+        }
+
+        .math-answer-display {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            min-height: 2.5rem;
+            color: #1a202c;
         }
 
         /* Modal Styles */
@@ -529,21 +698,26 @@
         }
     </style>
 </head>
-<body>
+<body class="has-dashboard-nav">
+    {% include 'includes/dashboard_navbar.html' %}
     <div class="video-background">
         <video autoplay muted loop playsinline>
-            <source src="static/background.mp4" type="video/mp4">
+            <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
         </video>
     </div>
 
-    <a href="/" class="back-btn">
-        ← Back to Home
-    </a>
 
     <div class="container">
         <div class="header">
             <h1>Interactive Learning Modules</h1>
             <p>Choose a module to start your interactive learning experience!</p>
+        </div>
+
+        <div id="mediaSecurityBanner" hidden style="display:none;max-width:900px;margin:0 auto 1.5rem;padding:1rem 1.25rem;background:#fef3c7;border:2px solid #f59e0b;border-radius:0.75rem;color:#1a1a1a;font-size:0.95rem;line-height:1.5;"></div>
+
+        <div id="moduleActiveBar" class="module-active-bar">
+            <span id="moduleActiveTitle">Learning module active</span>
+            <button type="button" class="btn-close-module" onclick="closeLearningModule()">Close Learning Module</button>
         </div>
 
         <div class="modules-grid">
@@ -555,7 +729,7 @@
 
             <div class="module-card">
                 <h2 class="module-title">Emotion Detection & Learning</h2>
-                <p class="module-description">Get personalized learning experience based on your emotional state with adaptive questions and support.</p>
+                <p class="module-description">MCQs adapt to your mood: harder when happy (after a correct answer); easier after 5 seconds neutral or right away if sad.</p>
                 <button class="btn btn-primary" onclick="startEmotionDetection()">Start Learning</button>
             </div>
 
@@ -580,21 +754,29 @@
 
         <div class="video-container">
             <video id="videoElement" autoplay playsinline></video>
-            <div class="controls">
-                <button class="btn btn-secondary" onclick="stopCamera()">Stop</button>
+            <div class="controls video-controls-row">
+                <button type="button" class="btn-close-module" onclick="closeLearningModule()">Close Learning Module</button>
             </div>
         </div>
 
-        <div class="drawing-container" style="display: none; margin-top: 2rem;">
-            <canvas id="drawingCanvas" width="800" height="600" style="border: 2px solid #000; background: white; border-radius: 8px;"></canvas>
-            <div class="drawing-controls" style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
-                <button class="btn btn-primary" onclick="clearCanvas()">Clear</button>
-                <button class="btn btn-primary" onclick="changeColor('#000000')">Black</button>
-                <button class="btn btn-primary" onclick="changeColor('#ff0000')">Red</button>
-                <button class="btn btn-primary" onclick="changeColor('#0000ff')">Blue</button>
-                <button class="btn btn-primary" onclick="changeColor('#00ff00')">Green</button>
-                <input type="range" min="1" max="20" value="5" class="slider" id="brushSize" onchange="changeBrushSize(this.value)">
-                <span id="brushSizeValue">5px</span>
+        <div class="drawing-container" style="display: none;">
+            <div class="drawing-workspace">
+                <div class="drawing-canvas-wrap">
+                    <canvas id="drawingCanvas" width="800" height="600"></canvas>
+                </div>
+                <div class="drawing-controls">
+                    <button type="button" class="btn-close-module" onclick="closeLearningModule()">Close Learning Module</button>
+                    <button type="button" class="btn btn-primary" onclick="clearCanvas()">Clear Canvas</button>
+                    <button type="button" class="btn btn-primary" onclick="changeColor('#000000')">Black</button>
+                    <button type="button" class="btn btn-primary" onclick="changeColor('#ff0000')">Red</button>
+                    <button type="button" class="btn btn-primary" onclick="changeColor('#0000ff')">Blue</button>
+                    <button type="button" class="btn btn-primary" onclick="changeColor('#00ff00')">Green</button>
+                    <div class="brush-row">
+                        <label for="brushSize">Brush size</label>
+                        <input type="range" min="1" max="20" value="5" class="slider" id="brushSize" onchange="changeBrushSize(this.value)">
+                        <span id="brushSizeValue">5px</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -651,6 +833,9 @@
 
         <!-- Game Containers -->
         <div id="gameContainer" style="display: none;">
+            <div style="margin-bottom: 1rem; text-align: center;">
+                <button type="button" class="btn-close-module" onclick="closeLearningModule()">Close Learning Module</button>
+            </div>
             <div id="wordScrambleGame" class="game-content" style="display: none;">
                 <h2>Word Scramble</h2>
                 <div class="game-area">
@@ -665,6 +850,7 @@
                 <h2>Math Challenge</h2>
                 <div class="game-area">
                     <div id="mathProblem" class="math-problem"></div>
+                    <div id="mathAnswerDisplay" class="math-answer-display">Your answer: —</div>
                     <div class="number-pad">
                         <button onclick="appendNumber('1')">1</button>
                         <button onclick="appendNumber('2')">2</button>
@@ -704,6 +890,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/learning-module.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/emotion-quiz.js') }}"></script>
     <script>
         // Video background handling
         document.addEventListener('DOMContentLoaded', function() {
@@ -750,33 +938,52 @@
 
         async function startCamera() {
             try {
+                if (window.NeuroLearnMedia && NeuroLearnMedia.showBlockedUI('mediaSecurityBanner')) {
+                    return;
+                }
                 console.log('Starting camera...');
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = window.NeuroLearnMedia
+                    ? await NeuroLearnMedia.getUserMedia({ video: true })
+                    : await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
                 videoContainer.style.display = 'block';
-                // Wait for video to be ready
                 await new Promise(resolve => video.onloadedmetadata = resolve);
                 console.log('Camera started successfully');
             } catch (err) {
                 console.error('Error accessing camera:', err);
-                alert('Could not access camera. Please make sure you have granted camera permissions.');
+                if (window.NeuroLearnMedia) {
+                    NeuroLearnMedia.alertCameraError(err);
+                } else {
+                    alert('Could not access camera. Please make sure you have granted camera permissions.');
+                }
+            }
+        }
+
+        window.onLearningModuleClose = function () {
+            isProcessing = false;
+            currentModule = null;
+            faceLabelsContainer = null;
+        };
+
+        function closeLearningModule() {
+            if (window.LearningModule) {
+                LearningModule.close();
+            } else {
+                const stream = video.srcObject;
+                if (stream) {
+                    stream.getTracks().forEach((t) => t.stop());
+                }
+                video.srcObject = null;
+                videoContainer.style.display = 'none';
+                feedbackContainer.style.display = 'none';
+            }
+            if (window.onLearningModuleClose) {
+                onLearningModuleClose();
             }
         }
 
         function stopCamera() {
-            const stream = video.srcObject;
-            if (stream) {
-                const tracks = stream.getTracks();
-                tracks.forEach(track => track.stop());
-                video.srcObject = null;
-            }
-            videoContainer.style.display = 'none';
-            feedbackContainer.style.display = 'none';
-            if (faceLabelsContainer) {
-                faceLabelsContainer.remove();
-                faceLabelsContainer = null;
-            }
-            currentModule = null;
+            closeLearningModule();
         }
 
         async function captureFrame() {
@@ -809,77 +1016,116 @@
             }
         }
 
-        function updateFaceLabels(faceData) {
+        /** Map MediaPipe normalized coords to overlay pixels (video uses object-fit: cover). */
+        function mapLandmarkToDisplay(position, frameW, frameH) {
+            const rect = video.getBoundingClientRect();
+            const vw = frameW || video.videoWidth || 640;
+            const vh = frameH || video.videoHeight || 480;
+            const cw = rect.width;
+            const ch = rect.height;
+
+            let nx = position.x;
+            let ny = position.y;
+            if (nx > 1 || ny > 1) {
+                nx = position.x / vw;
+                ny = position.y / vh;
+            }
+
+            const scale = Math.max(cw / vw, ch / vh);
+            const padX = (vw * scale - cw) / 2;
+            const padY = (vh * scale - ch) / 2;
+            return {
+                x: nx * vw * scale - padX,
+                y: ny * vh * scale - padY,
+            };
+        }
+
+        function updateFaceLabels(faceData, frameW, frameH) {
             if (!faceLabelsContainer) return;
-            
+
             faceLabelsContainer.innerHTML = '';
             const colors = {
-                "Left Eye": "#ff0000",
-                "Right Eye": "#00ff00",
-                "Nose": "#0000ff",
-                "Mouth": "#ffff00",
-                "Left Ear": "#ff00ff",
-                "Right Ear": "#00ffff",
-                "Chin": "#c86464"
+                'Left Eye': '#ff0000',
+                'Right Eye': '#00ff00',
+                'Nose': '#0000ff',
+                'Mouth': '#ffff00',
+                'Left Ear': '#ff00ff',
+                'Right Ear': '#00ffff',
+                'Chin': '#c86464',
             };
 
-            const offsets = {
-                "Left Eye": { x: -120, y: -20 },
-                "Right Eye": { x: 120, y: -20 },
-                "Nose": { x: 0, y: -80 },
-                "Mouth": { x: 0, y: 60 },
-                "Left Ear": { x: -140, y: 0 },
-                "Right Ear": { x: 140, y: 0 },
-                "Chin": { x: 0, y: 100 }
+            const labelOffsets = {
+                'Left Eye': { x: -80, y: -30 },
+                'Right Eye': { x: 80, y: -30 },
+                'Nose': { x: 0, y: -60 },
+                'Mouth': { x: 0, y: 50 },
+                'Left Ear': { x: -100, y: -10 },
+                'Right Ear': { x: 100, y: -10 },
+                'Chin': { x: 0, y: 80 },
             };
+
+            const rect = video.getBoundingClientRect();
+            const offsetScale = Math.min(rect.width, rect.height) / 480;
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'face-arrows-svg');
+            svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            svg.appendChild(defs);
 
             faceData.forEach(face => {
                 for (const [organ, position] of Object.entries(face)) {
-                    const labelContainer = document.createElement('div');
-                    labelContainer.className = 'organ-label';
-                    
-                    // Set the base position at the landmark point
-                    labelContainer.style.left = `${position.x}px`;
-                    labelContainer.style.top = `${position.y}px`;
+                    const color = colors[organ] || '#ffffff';
+                    const pt = mapLandmarkToDisplay(position, frameW, frameH);
+                    const off = labelOffsets[organ] || { x: 0, y: -40 };
+                    const labelX = pt.x + off.x * offsetScale;
+                    const labelY = pt.y + off.y * offsetScale;
 
-                    // Create text label
-                    const text = document.createElement('div');
-                    text.className = 'organ-text';
-                    text.style.color = colors[organ];
-                    text.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                    text.textContent = organ;
+                    const markerId = `arrow-${organ.replace(/\s/g, '-')}`;
+                    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                    marker.setAttribute('id', markerId);
+                    marker.setAttribute('markerWidth', '8');
+                    marker.setAttribute('markerHeight', '8');
+                    marker.setAttribute('refX', '6');
+                    marker.setAttribute('refY', '4');
+                    marker.setAttribute('orient', 'auto');
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', 'M0,0 L8,4 L0,8 Z');
+                    path.setAttribute('fill', color);
+                    marker.appendChild(path);
+                    defs.appendChild(marker);
 
-                    // Create point
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', String(labelX));
+                    line.setAttribute('y1', String(labelY));
+                    line.setAttribute('x2', String(pt.x));
+                    line.setAttribute('y2', String(pt.y));
+                    line.setAttribute('stroke', color);
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('marker-end', `url(#${markerId})`);
+                    svg.appendChild(line);
+
                     const point = document.createElement('div');
                     point.className = 'organ-point';
-                    point.style.backgroundColor = colors[organ];
-                    point.style.width = '6px';
-                    point.style.height = '6px';
+                    point.style.left = `${pt.x}px`;
+                    point.style.top = `${pt.y}px`;
+                    point.style.backgroundColor = color;
+                    faceLabelsContainer.appendChild(point);
 
-                    // Create arrow
-                    const arrow = document.createElement('div');
-                    arrow.className = 'organ-arrow';
-                    arrow.style.backgroundColor = colors[organ];
-
-                    // Calculate arrow position and rotation
-                    const offset = offsets[organ];
-                    const length = Math.sqrt(offset.x * offset.x + offset.y * offset.y);
-                    const angle = Math.atan2(offset.y, offset.x) * (180 / Math.PI);
-
-                    // Position the label container with offset
-                    labelContainer.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
-
-                    // Position and rotate the arrow
-                    arrow.style.width = `${length}px`;
-                    arrow.style.transform = `rotate(${angle}deg)`;
-
-                    // Add elements to container in correct order
-                    labelContainer.appendChild(text);
-                    labelContainer.appendChild(arrow);
-                    labelContainer.appendChild(point);
-                    faceLabelsContainer.appendChild(labelContainer);
+                    const text = document.createElement('div');
+                    text.className = 'organ-text';
+                    text.style.left = `${labelX}px`;
+                    text.style.top = `${labelY}px`;
+                    text.style.color = color;
+                    text.textContent = organ;
+                    faceLabelsContainer.appendChild(text);
                 }
             });
+
+            faceLabelsContainer.appendChild(svg);
         }
 
         async function processFaceFeatures() {
@@ -901,7 +1147,11 @@
                 console.log('Face features response:', data);
                 
                 if (data.success && data.face_data) {
-                    updateFaceLabels(data.face_data);
+                    updateFaceLabels(
+                        data.face_data,
+                        data.frame_width,
+                        data.frame_height
+                    );
                 } else if (data.error) {
                     console.error('Face features error:', data.error);
                     // Clear existing labels if there's an error
@@ -996,17 +1246,100 @@
             }
         }
 
+        function renderEmotionMcq(feedbackText, feedbackType) {
+            const questionContainer = document.querySelector('.question-container');
+            if (!window.EmotionQuiz) return;
+
+            if (!EmotionQuiz.getState().current) {
+                EmotionQuiz.loadQuestion('easy');
+            }
+            const q = EmotionQuiz.getState().current;
+            const diff = EmotionQuiz.getState().difficulty;
+            const diffLabel = diff === 'hard' ? 'Harder' : 'Easier';
+            const feedbackHtml = feedbackText
+                ? `<div id="mcqFeedback" class="mcq-feedback ${feedbackType || 'info'}">${feedbackText}</div>`
+                : '<div id="mcqFeedback" class="mcq-feedback" style="display:none;"></div>';
+
+            questionContainer.innerHTML = `
+                <span class="mcq-difficulty ${diff}">${diffLabel} question</span>
+                <p class="mcq-title">${q.question}</p>
+                <div class="mcq-options" id="mcqOptions">
+                    ${q.options.map((opt, i) => `
+                        <label class="mcq-option">
+                            <input type="radio" name="mcqAnswer" value="${i}">
+                            <span>${opt}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="mcq-actions">
+                    <button type="button" class="btn btn-primary" id="mcqSubmitBtn">Submit Answer</button>
+                </div>
+                ${feedbackHtml}
+            `;
+
+            document.getElementById('mcqSubmitBtn').addEventListener('click', submitEmotionMcq);
+        }
+
+        function showMcqFeedback(text, type) {
+            const el = document.getElementById('mcqFeedback');
+            if (!el) return;
+            el.style.display = 'block';
+            el.className = `mcq-feedback ${type}`;
+            el.textContent = text;
+        }
+
+        function submitEmotionMcq() {
+            const selected = document.querySelector('input[name="mcqAnswer"]:checked');
+            if (!selected) {
+                renderEmotionMcq('Please select an answer.', 'error');
+                return;
+            }
+            const result = EmotionQuiz.onAnswer(parseInt(selected.value, 10));
+            if (result.correct) {
+                renderEmotionMcq(
+                    result.message,
+                    result.upgrade ? 'success' : 'info'
+                );
+            } else {
+                renderEmotionMcq(result.message, 'error');
+            }
+        }
+
         function updateFeedback(data) {
             if (!data.emotion) return;
-            
+
             const emotionFeedback = document.querySelector('.emotion-feedback');
             const questionContainer = document.querySelector('.question-container');
-            
-            emotionFeedback.textContent = `Current Emotion: ${data.emotion}`;
-            questionContainer.innerHTML = `
-                <p><strong>Support Question:</strong> ${data.mood_question}</p>
-                <p><strong>Learning Question:</strong> ${data.academic_question}</p>
+
+            emotionFeedback.innerHTML = `
+                <strong>Current emotion:</strong> ${data.emotion}
+                <p class="emotion-hint">${data.mood_question || ''}</p>
             `;
+
+            if (!window.EmotionQuiz) return;
+
+            const change = EmotionQuiz.onEmotionDetected(data.emotion);
+            let hint = '';
+            if (change.reason === 'neutral_waiting' && change.neutralSecondsLeft != null) {
+                hint = `<p class="emotion-hint">Neutral for ${change.neutralSecondsLeft}s more — easier question in ${change.neutralSecondsLeft} seconds…</p>`;
+                emotionFeedback.innerHTML = `
+                    <strong>Current emotion:</strong> ${data.emotion}
+                    <p class="emotion-hint">${data.mood_question || ''}</p>
+                    ${hint}`;
+            }
+
+            if (change.changed) {
+                let msg = null;
+                if (change.reason === 'easier') {
+                    msg = change.trigger === 'neutral_5s'
+                        ? 'Neutral for 5 seconds — switching to an easier question.'
+                        : 'We noticed you may need a break — here is an easier question.';
+                }
+                renderEmotionMcq(msg, 'info');
+            } else if (!EmotionQuiz.getState().current) {
+                EmotionQuiz.loadQuestion('easy');
+                renderEmotionMcq();
+            }
         }
 
         function updateFingerCountFeedback(totalFingers, handCounts) {
@@ -1048,9 +1381,16 @@
             audio.play().catch(error => console.error('Error playing audio:', error));
         }
 
+        function beginModule(name, title) {
+            if (window.LearningModule) {
+                LearningModule.showActiveBar(title);
+            }
+        }
+
         async function startFaceFeatures() {
             if (currentModule === 'face') return;
             currentModule = 'face';
+            beginModule('face', 'Face Features Learning');
             await startCamera();
             createFaceLabelsContainer();
             processFaceFeatures();
@@ -1059,14 +1399,22 @@
         async function startEmotionDetection() {
             if (currentModule === 'emotion') return;
             currentModule = 'emotion';
+            beginModule('emotion', 'Emotion Detection & Learning');
+            if (window.EmotionQuiz) {
+                EmotionQuiz.reset();
+                EmotionQuiz.loadQuestion('easy');
+            }
             await startCamera();
             feedbackContainer.style.display = 'block';
+            document.querySelector('.finger-count-feedback').style.display = 'none';
+            renderEmotionMcq();
             processEmotion();
         }
 
         async function startFingerCounting() {
             if (currentModule === 'finger') return;
             currentModule = 'finger';
+            beginModule('finger', 'Finger Counting');
             await startCamera();
             document.querySelector('.finger-count-feedback').style.display = 'block';
             
@@ -1081,8 +1429,21 @@
 
         function startDrawing() {
             if (currentModule === 'drawing') return;
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach((t) => t.stop());
+                video.srcObject = null;
+            }
+            videoContainer.style.display = 'none';
+            feedbackContainer.style.display = 'none';
+            const fingerFb = document.querySelector('.finger-count-feedback');
+            if (fingerFb) fingerFb.style.display = 'none';
+            if (faceLabelsContainer) {
+                faceLabelsContainer.remove();
+                faceLabelsContainer = null;
+            }
+            isProcessing = false;
             currentModule = 'drawing';
-            stopCamera();
+            beginModule('drawing', 'Drawing Canvas');
             document.querySelector('.drawing-container').style.display = 'block';
             
             // Initialize canvas
@@ -1164,11 +1525,16 @@
 
         // Games Menu Functions
         function showGamesMenu() {
+            beginModule('games', 'Educational Games');
             document.getElementById('gamesModal').style.display = 'block';
         }
 
         function closeGamesMenu() {
             document.getElementById('gamesModal').style.display = 'none';
+            const gc = document.getElementById('gameContainer');
+            if (!gc || gc.style.display === 'none' || gc.style.display === '') {
+                closeLearningModule();
+            }
         }
 
         function startGame(gameType) {
@@ -1239,43 +1605,58 @@
         }
 
         // Math Challenge Game
+        let mathUserAnswer = '';
+        let mathCorrectAnswer = 0;
+
+        function updateMathAnswerDisplay() {
+            const el = document.getElementById('mathAnswerDisplay');
+            if (el) {
+                el.textContent = mathUserAnswer.length
+                    ? `Your answer: ${mathUserAnswer}`
+                    : 'Your answer: —';
+            }
+        }
+
         function initMathChallenge() {
             const num1 = Math.floor(Math.random() * 10) + 1;
             const num2 = Math.floor(Math.random() * 10) + 1;
             const operators = ['+', '-', '×'];
             const operator = operators[Math.floor(Math.random() * operators.length)];
-            
-            let answer;
-            switch(operator) {
-                case '+': answer = num1 + num2; break;
-                case '-': answer = num1 - num2; break;
-                case '×': answer = num1 * num2; break;
+
+            switch (operator) {
+                case '+': mathCorrectAnswer = num1 + num2; break;
+                case '-': mathCorrectAnswer = num1 - num2; break;
+                case '×': mathCorrectAnswer = num1 * num2; break;
             }
-            
+
+            mathUserAnswer = '';
             document.getElementById('mathProblem').textContent = `${num1} ${operator} ${num2} = ?`;
-            document.getElementById('mathProblem').dataset.answer = answer;
+            document.getElementById('mathProblem').dataset.answer = String(mathCorrectAnswer);
             document.getElementById('mathFeedback').textContent = '';
+            updateMathAnswerDisplay();
         }
 
-        let currentAnswer = '';
-
         function appendNumber(num) {
-            currentAnswer += num;
-            document.getElementById('mathProblem').textContent = 
-                document.getElementById('mathProblem').textContent.replace('?', currentAnswer);
+            mathUserAnswer += num;
+            updateMathAnswerDisplay();
         }
 
         function clearAnswer() {
-            currentAnswer = '';
-            document.getElementById('mathProblem').textContent = 
-                document.getElementById('mathProblem').textContent.replace(currentAnswer, '?');
+            mathUserAnswer = '';
+            updateMathAnswerDisplay();
+            document.getElementById('mathFeedback').textContent = '';
         }
 
         function checkMathAnswer() {
-            const correctAnswer = document.getElementById('mathProblem').dataset.answer;
             const feedback = document.getElementById('mathFeedback');
-            
-            if (parseInt(currentAnswer) === parseInt(correctAnswer)) {
+
+            if (!mathUserAnswer.length) {
+                feedback.textContent = 'Enter a number first.';
+                feedback.style.color = '#b45309';
+                return;
+            }
+
+            if (parseInt(mathUserAnswer, 10) === mathCorrectAnswer) {
                 feedback.textContent = 'Correct! Great job!';
                 feedback.style.color = 'green';
                 setTimeout(initMathChallenge, 2000);
@@ -1283,7 +1664,6 @@
                 feedback.textContent = 'Try again!';
                 feedback.style.color = 'red';
             }
-            currentAnswer = '';
         }
 
         // Memory Match Game
@@ -1421,6 +1801,21 @@
                 feedback.style.color = 'red';
             }
         }
+    </script>
+    <script src="{{ url_for('static', filename='js/media-permissions.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    {% include 'includes/nav_scripts.html' %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.NeuroLearnMedia) {
+            NeuroLearnMedia.showBlockedUI('mediaSecurityBanner');
+        }
+    });
+    fetch('/api/progress/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_type: 'module_visit', payload: { module: 'interactive' } }),
+    }).catch(() => {});
     </script>
 </body>
 </html>

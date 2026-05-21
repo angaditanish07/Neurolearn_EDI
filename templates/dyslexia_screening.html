@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'includes/head_common.html' %}
     <title>Dyslexia Screening</title>
     <link href="https://fonts.googleapis.com/css2?family=OpenDyslexic:wght@400;700&display=swap" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/media-permissions.js') }}"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.botpress.cloud/webchat/v2.5/inject.js"></script>
@@ -406,7 +406,9 @@
         }
     </style>
 </head>
-<body>
+<body class="has-dashboard-nav">
+    {% include 'includes/dashboard_navbar.html' %}
+    <div id="mediaSecurityBanner" hidden style="display:none;margin:1rem auto;max-width:800px;padding:1rem;background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;color:#333;z-index:100;position:relative;"></div>
     <video class="video-background" autoplay muted loop playsinline preload="auto">
         <source src="{{ url_for('static', filename='videos/testback.mp4') }}" type="video/mp4">
         Your browser does not support the video tag.
@@ -575,6 +577,11 @@
         </div>
     </div>
     <script>
+    if (window.NeuroLearnMedia) {
+        document.addEventListener('DOMContentLoaded', function() {
+            NeuroLearnMedia.showBlockedUI('mediaSecurityBanner');
+        });
+    }
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
@@ -589,15 +596,28 @@
         
         if (!isRecording) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true,
-                        sampleRate: 44100,
-                        channelCount: 1
-                    }
-                });
+                if (window.NeuroLearnMedia && NeuroLearnMedia.showBlockedUI('mediaSecurityBanner')) {
+                    return;
+                }
+                const stream = window.NeuroLearnMedia
+                    ? await NeuroLearnMedia.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                            sampleRate: 44100,
+                            channelCount: 1
+                        }
+                    })
+                    : await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                            sampleRate: 44100,
+                            channelCount: 1
+                        }
+                    });
                 
                 let mimeType = 'audio/webm;codecs=opus';
                 if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -718,7 +738,10 @@
                 status.style.color = '#e74c3c';
             } catch (error) {
                 console.error('Error accessing microphone:', error);
-                status.textContent = `Error: ${error.message}. Please check your microphone.`;
+                if (window.NeuroLearnMedia) {
+                    NeuroLearnMedia.alertCameraError(error);
+                }
+                status.textContent = error.message || 'Microphone blocked. Use http://localhost:8080 on this PC.';
                 status.style.color = '#e74c3c';
             }
         } else {
@@ -1296,5 +1319,7 @@
         updateProgress();
     });
     </script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    {% include 'includes/nav_scripts.html' %}
 </body>
 </html> 

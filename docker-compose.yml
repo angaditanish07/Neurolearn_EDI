@@ -1,0 +1,25 @@
+# Requires Docker Desktop to be RUNNING on Windows.
+# For local dev without Docker, use: .\venv\Scripts\python.exe run.py
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      FLASK_ENV: production
+      FLASK_DEBUG: "0"
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-replace-me-in-production}
+      ENABLE_DEBUG_ROUTES: "0"
+      REDIS_URL: ${REDIS_URL:-}
+    volumes:
+      - ./test_results:/app/test_results
+      - ./uploads:/app/uploads
+
+  # Optional — enable with: docker compose --profile redis up --build
+  redis:
+    profiles: ["redis"]
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'includes/head_common.html' %}
+    <title>{% block title %}NeuroLearn{% endblock %}</title>
+    <style>
+        body { font-family: 'Lexend', sans-serif; background: linear-gradient(135deg, #6366f1, #a855f7); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+        .auth-card { background: #fff; padding: 2rem; border-radius: 1rem; max-width: 720px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.15); margin: 1.5rem auto; }
+        body.has-dashboard-nav { display: block; min-height: 100vh; }
+        .auth-card h1 { margin-top: 0; color: #4a2b7b; }
+        label { display: block; margin: 0.75rem 0 0.25rem; font-weight: 600; }
+        input, select { width: 100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 0.5rem; box-sizing: border-box; }
+        .btn-primary { width: 100%; margin-top: 1.25rem; padding: 0.75rem; background: #6366f1; color: #fff; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+        .btn-primary:hover { background: #4f46e5; }
+        .error { color: #dc2626; margin-top: 0.5rem; font-size: 0.9rem; }
+        .links { margin-top: 1rem; text-align: center; }
+        .links a { color: #6366f1; }
+        .disclaimer { font-size: 0.8rem; color: #666; margin-top: 1rem; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=OpenDyslexic:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="has-dashboard-nav">
+    {% include 'includes/dashboard_navbar.html' %}
+    <div class="auth-card">
+        {% block content %}{% endblock %}
+    </div>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    {% include 'includes/nav_scripts.html' %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

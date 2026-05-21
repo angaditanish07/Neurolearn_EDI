@@ -1,0 +1,43 @@
+{% extends 'auth_layout.html' %}
+{% block title %}Login — NeuroLearn{% endblock %}
+{% block content %}
+<h1>Welcome back</h1>
+<p>Sign in to continue your learning journey.</p>
+<form id="loginForm">
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" required autocomplete="username">
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required autocomplete="current-password">
+    <div id="loginError" class="error" hidden></div>
+    <button type="submit" class="btn-primary">Sign in</button>
+</form>
+<div class="links">
+    <p>No account? <a href="{{ url_for('pages.register') }}">Register</a></p>
+    <p><a href="{{ url_for('pages.index') }}">Home</a></p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('loginError');
+    errEl.hidden = true;
+    const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+        }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+        errEl.textContent = data.error || 'Login failed';
+        errEl.hidden = false;
+        return;
+    }
+    const next = new URLSearchParams(location.search).get('next') || '/';
+    window.location.href = data.user.role === 'parent' ? '/parent/dashboard' : next;
+});
+</script>
+{% endblock %}

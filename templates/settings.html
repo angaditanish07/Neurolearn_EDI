@@ -1,0 +1,35 @@
+{% extends 'auth_layout.html' %}
+{% block title %}Settings — NeuroLearn{% endblock %}
+{% block content %}
+<h1>Accessibility settings</h1>
+<p>These preferences are saved in your browser for this session.</p>
+<label><input type="checkbox" id="dyslexicFont"> Dyslexia-friendly font</label>
+<label><input type="checkbox" id="highContrast"> High contrast</label>
+<label>Text size: <input type="range" id="fontSize" min="12" max="24" value="16"></label>
+<label><input type="checkbox" id="readAloud"> Read aloud enabled</label>
+<button type="button" class="btn-primary" id="saveSettings">Save & return home</button>
+<div class="links"><a href="{{ url_for('pages.profile') }}">Profile</a></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const s = JSON.parse(localStorage.getItem('nl_settings') || '{}');
+document.getElementById('dyslexicFont').checked = !!s.dyslexicFont;
+document.getElementById('highContrast').checked = !!s.highContrast;
+document.getElementById('fontSize').value = s.fontSize || 16;
+document.getElementById('readAloud').checked = !!s.readAloud;
+document.getElementById('saveSettings').onclick = () => {
+    const settings = {
+        dyslexicFont: document.getElementById('dyslexicFont').checked,
+        highContrast: document.getElementById('highContrast').checked,
+        fontSize: parseInt(document.getElementById('fontSize').value, 10),
+        readAloud: document.getElementById('readAloud').checked,
+    };
+    localStorage.setItem('nl_settings', JSON.stringify(settings));
+    if (window.NeuroLearnA11y) {
+        Object.assign(NeuroLearnA11y.state, settings);
+        NeuroLearnA11y.applyAll();
+    }
+    window.location.href = '/';
+};
+</script>
+{% endblock %}

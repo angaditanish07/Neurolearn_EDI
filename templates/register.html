@@ -1,0 +1,63 @@
+{% extends 'auth_layout.html' %}
+{% block title %}Register — NeuroLearn{% endblock %}
+{% block content %}
+<h1>Create account</h1>
+<form id="registerForm">
+    <label for="display_name">Display name</label>
+    <input type="text" id="display_name" name="display_name" required>
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" required>
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" required>
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required minlength="6">
+    <label for="role">I am a</label>
+    <select id="role" name="role">
+        <option value="student">Student / Learner</option>
+        <option value="parent">Parent / Guardian</option>
+    </select>
+    <div id="registerError" class="error" hidden></div>
+    <p class="disclaimer">NeuroLearn screening is educational support only — not a medical diagnosis.</p>
+    <button type="submit" class="btn-primary">Create account</button>
+</form>
+<div class="links">
+    <p>Already have an account? <a href="{{ url_for('pages.login') }}">Sign in</a></p>
+</div>
+<div id="linkCodeBox" hidden style="margin-top:1rem;padding:1rem;background:#f0fdf4;border-radius:0.5rem;">
+    <strong>Family link code (share with parent):</strong>
+    <p id="linkCodeDisplay" style="font-size:1.5rem;letter-spacing:0.2em;font-weight:bold;"></p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('registerError');
+    errEl.hidden = true;
+    const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            display_name: document.getElementById('display_name').value,
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            role: document.getElementById('role').value,
+        }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+        errEl.textContent = data.error || 'Registration failed';
+        errEl.hidden = false;
+        return;
+    }
+    if (data.user.role === 'student' && data.user.link_code) {
+        document.getElementById('linkCodeDisplay').textContent = data.user.link_code;
+        document.getElementById('linkCodeBox').hidden = false;
+        setTimeout(() => { window.location.href = '/'; }, 4000);
+    } else {
+        window.location.href = data.user.role === 'parent' ? '/parent/dashboard' : '/';
+    }
+});
+</script>
+{% endblock %}

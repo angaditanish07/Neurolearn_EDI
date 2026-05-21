@@ -1,0 +1,24 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-navbar.css') }}">
+<nav class="nav-bar dashboard-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-container">
+        <a href="{{ url_for('pages.index') }}" class="nav-logo">
+            <img src="{{ url_for('static', filename='brain.png') }}" alt="" width="40" height="40">
+            <span>NeuroLearn</span>
+        </a>
+        <div class="nav-menu-links" id="navMenuLinks">
+            <a href="{{ url_for('pages.index') }}" data-nav="home">Home</a>
+            <a href="{{ url_for('pages.interactive_model') }}" data-nav="interactive">Interactive Learning</a>
+            <a href="{{ url_for('pages.dyslexia_screening') }}" data-nav="screening">Dyslexia Screening</a>
+            <a href="{{ url_for('pages.help_page') }}" data-nav="help">Help</a>
+            <a href="{{ url_for('parent.parent_dashboard_page') }}" data-nav="parent" id="navParentLink" style="display:none;">Parent Dashboard</a>
+        </div>
+        <div id="authNav"></div>
+        <div class="accessibility-controls">
+            <button type="button" class="nav-btn nav-btn-access" onclick="toggleDyslexicFont()" aria-label="Toggle dyslexic-friendly font">📝 Dyslexic Font</button>
+            <button type="button" class="nav-btn nav-btn-access" onclick="toggleHighContrast()" aria-label="Toggle high contrast">👁️ Contrast</button>
+            <button type="button" class="nav-btn nav-btn-yellow" onclick="adjustTextSize(2)" aria-label="Increase text size">🔍 Bigger</button>
+            <button type="button" class="nav-btn nav-btn-yellow" onclick="adjustTextSize(-2)" aria-label="Decrease text size">🔍 Smaller</button>
+            <button type="button" class="nav-btn nav-btn-purple" onclick="toggleReadAloud()" aria-label="Toggle read aloud">🔊 Read Aloud</button>
+        </div>
+    </div>
+</nav>

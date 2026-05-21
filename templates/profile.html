@@ -1,0 +1,29 @@
+{% extends 'auth_layout.html' %}
+{% block title %}Profile — NeuroLearn{% endblock %}
+{% block content %}
+<h1>Your profile</h1>
+<div id="profileContent">Loading...</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadProfile() {
+    const res = await fetch('/api/me');
+    const data = await res.json();
+    if (!data.success) { window.location.href = '/login'; return; }
+    const u = data.user;
+    let html = `<p><strong>Name:</strong> ${u.display_name}</p>
+        <p><strong>Username:</strong> ${u.username}</p>
+        <p><strong>Role:</strong> ${u.role}</p>`;
+    if (u.link_code) {
+        html += `<p style="margin-top:1rem;padding:1rem;background:#f0fdf4;border-radius:0.5rem;">
+            <strong>Family link code</strong> (give this to your parent):<br>
+            <span style="font-size:1.4rem;letter-spacing:0.15em;">${u.link_code}</span></p>`;
+    }
+    if (u.role === 'parent') {
+        html += `<p><a href="/parent/dashboard">Go to Parent Dashboard</a></p>`;
+    }
+    document.getElementById('profileContent').innerHTML = html;
+}
+loadProfile();
+</script>
+{% endblock %}

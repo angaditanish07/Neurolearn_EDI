@@ -87,9 +87,11 @@ def test_model():
         # Convert case to numpy array
         X = np.array([list(case.values())])
         
-        # Make prediction
-        prediction = model.predict(X)[0]
-        probabilities = model.predict_proba(X)[0]
+        clf = model['model']
+        scaler = model['scaler']
+        X_scaled = scaler.transform(X)
+        prediction = clf.predict(X_scaled)[0]
+        probabilities = clf.predict_proba(X_scaled)[0]
         
         print(f"\nTest Case {i+1} ({risk_levels[i]}):")
         print(f"Predicted Risk Level: {risk_levels[prediction]}")

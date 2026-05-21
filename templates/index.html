@@ -1,14 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'includes/head_common.html' %}
     <title>NeuroLearn - Inclusive Education Platform 🧠</title>
-    <link href="https://fonts.cdnfonts.com/css/lexend" rel="stylesheet">
-    <!-- OpenDyslexic font for dyslexic-friendly UI -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.0/open-dyslexic.min.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="shortcut icon" href="brain.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.botpress.cloud/webchat/v2.5/inject.js"></script>
@@ -772,13 +766,48 @@ function updateProgress(type, value) {
 }
 
 function openTutorial() {
-    announceChange("Opening tutorial...");
+    window.location.href = '/help';
 }
 function contactTeacher() {
-    announceChange("Opening teacher contact form...");
+    window.location.href = '/help#teacher';
 }
-function openParentDashboard() {
-    announceChange("Opening parent dashboard...");
+async function openParentDashboard() {
+    const res = await fetch('/api/me');
+    const data = await res.json();
+    if (!data.success) {
+        window.location.href = '/login?next=/parent/dashboard';
+        return;
+    }
+    if (data.user.role === 'parent') {
+        window.location.href = '/parent/dashboard';
+        return;
+    }
+    if (data.user.link_code) {
+        alert('Share your family link code with your parent: ' + data.user.link_code);
+    } else {
+        alert('Ask your parent to register and link your account using your family code from Profile.');
+    }
+    window.location.href = '/profile';
+}
+function openAccessibilitySettings() {
+    window.location.href = '/settings';
+}
+function openHelp() {
+    window.location.href = '/help';
+}
+async function provideFeedback() {
+    const text = prompt('Share your feedback (optional):');
+    if (text === null) return;
+    await fetch('/api/progress/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_type: 'feedback', payload: { text } }),
+    });
+    announceChange('Thank you for your feedback!');
+}
+function toggleReadAloud() {
+    state.isReadAloudEnabled = !state.isReadAloudEnabled;
+    announceChange('Read aloud ' + (state.isReadAloudEnabled ? 'enabled' : 'disabled'));
 }
 
 function announceChange(message) {
@@ -817,8 +846,14 @@ function readSection(sectionId) {
         speakText(section.innerText);
     }
 }
-function markChallengeDone() {
-    alert('Great job! You completed today\'s challenge!');
+async function markChallengeDone() {
+    await fetch('/api/progress/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_type: 'daily_challenge', payload: { completed: true } }),
+    });
+    announceChange('Great job! Daily challenge completed!');
+    if (typeof loadUserProgress === 'function') loadUserProgress();
 }
 function startFaceDetection() {
     alert('Face detection feature coming soon!');
@@ -1154,38 +1189,11 @@ function goToInteractiveLearning() {
 <body>
     <div class="video-background">
         <video autoplay muted loop playsinline>
-            <source src="static/background.mp4" type="video/mp4">
+            <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
         </video>
     </div>
 
-    <nav class="nav-bar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <img src="static/brain.png" alt="Brain Logo" class="brain-icon">
-                <span class="nav-logo-text">NeuroLearn</span>
-            </div>
-            <div class="nav-links">
-                <!-- Removed dyslexia screening link from navbar -->
-            </div>
-            <div class="accessibility-controls">
-                <button onclick="toggleDyslexicFont()" class="btn btn-access" aria-label="Toggle Dyslexic-friendly font">
-                    <span class="icon">📝</span> Dyslexic Font
-                </button>
-                <button onclick="toggleHighContrast()" class="btn btn-access" aria-label="Toggle high contrast">
-                    <span class="icon">👁️</span> High Contrast
-                </button>
-                <button onclick="adjustTextSize(2)" class="btn btn-yellow" aria-label="Increase text size">
-                    <span class="icon">🔍</span> Bigger
-                </button>
-                <button onclick="adjustTextSize(-2)" class="btn btn-yellow" aria-label="Decrease text size">
-                    <span class="icon">🔍</span> Smaller
-                </button>
-                <button onclick="toggleReadAloud()" class="btn btn-purple" aria-label="Toggle read aloud">
-                    <span class="icon">🔊</span> Read Aloud
-                </button>
-            </div>
-        </div>
-    </nav>
+    {% include 'includes/dashboard_navbar.html' %}
 
     <!-- Top progress bar -->
     <div class="top-progress-bar"></div>
@@ -1308,20 +1316,10 @@ function goToInteractiveLearning() {
             </div>
         </div>
     </footer>
-    <script src="script.js"></script>
-    <div class="voice-controls">
-        <button id="voiceNavBtn" class="voice-btn" title="Voice Navigation">
-            🎤
-        </button>
-        <button id="readAloudBtn" class="voice-btn" title="Read Aloud">
-            &#x1F50A;
-        </button>
-        <!-- Add custom chat button -->
-        <button id="chatBtn" class="voice-btn" style="background: linear-gradient(135deg, #3498db, #8e44ad);" title="Chat with us">
-            💬
-        </button>
-    </div>
-
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app-home.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% include 'includes/nav_scripts.html' %}
     <div class="status-indicator"></div>
   
     <!-- Botpress Chat Widget -->
