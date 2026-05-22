@@ -59,7 +59,10 @@ class VoiceNav {
     speak(text) {
         if (!this.synthesis || !text) return;
         this.synthesis.cancel();
-        const u = new SpeechSynthesisUtterance(String(text).slice(0, 200));
+        const cleaned = window.NeuroLearnA11y?.sanitizeSpeechText
+            ? NeuroLearnA11y.sanitizeSpeechText(text)
+            : String(text);
+        const u = new SpeechSynthesisUtterance(cleaned.slice(0, 200));
         this.synthesis.speak(u);
     }
 
@@ -79,6 +82,13 @@ class VoiceNav {
             return;
         }
         if (command.includes('dyslexic')) {
+            const onScreening =
+                document.body.dataset.screeningPage === '1' ||
+                window.location.pathname.includes('dyslexia_screening');
+            if (onScreening) {
+                this.speak('Dyslexic font is disabled during screening');
+                return;
+            }
             if (window.toggleDyslexicFont) toggleDyslexicFont();
             return;
         }

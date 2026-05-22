@@ -44,3 +44,20 @@ body.dyslexic-font .path-card,
 body.dyslexic-font .modal-content {
     font-family: 'OpenDyslexic', sans-serif !important;
 }
+
+/* Screening must stay in standard font even if dyslexic mode was on elsewhere */
+body.screening-assessment,
+body.screening-assessment.dyslexic-font,
+body.screening-assessment.dyslexic-font p,
+body.screening-assessment.dyslexic-font h1,
+body.screening-assessment.dyslexic-font h2,
+body.screening-assessment.dyslexic-font h3,
+body.screening-assessment.dyslexic-font label,
+body.screening-assessment.dyslexic-font button,
+body.screening-assessment.dyslexic-font input,
+body.screening-assessment.dyslexic-font select,
+body.screening-assessment.dyslexic-font textarea {
+    font-family: 'Lexend', Arial, sans-serif !important;
+    letter-spacing: normal;
+    word-spacing: normal;
+}

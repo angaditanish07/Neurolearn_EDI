@@ -14,7 +14,9 @@
         </div>
         <div id="authNav"></div>
         <div class="accessibility-controls">
-            <button type="button" class="nav-btn nav-btn-access" onclick="toggleDyslexicFont()" aria-label="Toggle dyslexic-friendly font">📝 Dyslexic Font</button>
+            {% if request.endpoint != 'pages.dyslexia_screening' %}
+            <button type="button" class="nav-btn nav-btn-access" id="dyslexicFontBtn" onclick="toggleDyslexicFont()" aria-label="Toggle dyslexic-friendly font">📝 Dyslexic Font</button>
+            {% endif %}
             <button type="button" class="nav-btn nav-btn-access" onclick="toggleHighContrast()" aria-label="Toggle high contrast">👁️ Contrast</button>
             <button type="button" class="nav-btn nav-btn-yellow" onclick="adjustTextSize(2)" aria-label="Increase text size">🔍 Bigger</button>
             <button type="button" class="nav-btn nav-btn-yellow" onclick="adjustTextSize(-2)" aria-label="Decrease text size">🔍 Smaller</button>

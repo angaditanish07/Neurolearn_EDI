@@ -21,6 +21,7 @@
         '.status-indicator',
         '.sr-only',
         '.path-read-btn',
+        '.icon',
         '[aria-hidden="true"]',
         '[data-skip-read-aloud]',
     ].join(', ');
@@ -48,16 +49,29 @@
         setTimeout(() => el.remove(), 800);
     }
 
+    /** Remove emojis and symbols TTS often reads aloud (🔊, 🎯, etc.). */
+    function sanitizeSpeechText(text) {
+        let t = String(text || '');
+        try {
+            t = t.replace(/\p{Extended_Pictographic}/gu, '');
+        } catch (e) {
+            // Fallback for older engines without Unicode property escapes
+            t = t.replace(/(?:[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '');
+        }
+        t = t.replace(/[\uFE00-\uFE0F\u200D\u20E3]/g, '');
+        t = t.replace(/🔊\s*Read Aloud/gi, '');
+        t = t.replace(/Read Aloud/gi, '');
+        t = t.replace(/Reading\.\.\./gi, '');
+        t = t.replace(/\s+/g, ' ').trim();
+        return t;
+    }
+
     /** Strip UI chrome so we never read "Read Aloud", nav labels, or button names. */
     function extractReadableText(root) {
         if (!root) return '';
         const clone = root.cloneNode(true);
         clone.querySelectorAll(UI_SELECTORS_TO_SKIP).forEach((node) => node.remove());
-        let text = (clone.textContent || '').replace(/\s+/g, ' ').trim();
-        text = text.replace(/🔊\s*Read Aloud/gi, '');
-        text = text.replace(/Read Aloud/gi, '');
-        text = text.replace(/Reading\.\.\./gi, '');
-        return text.trim();
+        return sanitizeSpeechText(clone.textContent || '');
     }
 
     /**
@@ -81,6 +95,14 @@
         return prefer || good[0] || null;
     }
 
+    function isScreeningPage() {
+        return (
+            document.body.dataset.screeningPage === '1' ||
+            window.location.pathname === '/dyslexia_screening' ||
+            window.location.pathname.endsWith('/dyslexia_screening')
+        );
+    }
+
     const saved = loadSettings();
     window.NeuroLearnA11y = {
         state: {
@@ -91,12 +113,21 @@
         },
 
         applyAll() {
-            document.body.classList.toggle('dyslexic-font', this.state.dyslexicFont);
+            if (isScreeningPage()) {
+                document.body.classList.remove('dyslexic-font');
+            } else {
+                document.body.classList.toggle('dyslexic-font', this.state.dyslexicFont);
+            }
             document.body.classList.toggle('high-contrast', this.state.highContrast);
             document.documentElement.style.fontSize = `${this.state.fontSize}px`;
         },
 
         toggleDyslexicFont() {
+            if (isScreeningPage()) {
+                document.body.classList.remove('dyslexic-font');
+                announceChange('Dyslexic font is off during screening for accurate results');
+                return;
+            }
             this.state.dyslexicFont = !this.state.dyslexicFont;
             document.body.classList.toggle('dyslexic-font', this.state.dyslexicFont);
             saveSettings();
@@ -126,9 +157,12 @@
             return this.state.readAloud;
         },
 
+        sanitizeSpeechText(text) {
+            return sanitizeSpeechText(text);
+        },
+
         speakNow(text, maxLen) {
-            let cleaned = String(text || '').replace(/\s+/g, ' ').trim();
-            cleaned = cleaned.replace(/🔊\s*Read Aloud/gi, '').replace(/Read Aloud/gi, '').trim();
+            const cleaned = sanitizeSpeechText(text);
             if (!cleaned || !window.speechSynthesis) {
                 if (!window.speechSynthesis) {
                     announceChange('Read aloud is not supported in this browser');

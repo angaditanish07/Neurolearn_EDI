@@ -997,8 +997,12 @@ class SpeechUtility {
         if (this.isReading) {
             this.synth.cancel();
         }
-        
-        const utterance = new SpeechSynthesisUtterance(text);
+        const cleaned = window.NeuroLearnA11y?.sanitizeSpeechText
+            ? NeuroLearnA11y.sanitizeSpeechText(text)
+            : String(text || '').replace(/\s+/g, ' ').trim();
+        if (!cleaned) return;
+
+        const utterance = new SpeechSynthesisUtterance(cleaned);
         utterance.voice = this.voice;
         utterance.rate = rate;
         utterance.pitch = 1;
@@ -1205,24 +1209,24 @@ function goToInteractiveLearning() {
                 <div class="path-card" onclick="startLearningPath('visual')">
                     <button type="button" class="btn btn-purple path-read-btn" style="float:right;padding:0.25rem 0.5rem;font-size:0.85rem;" onclick="event.stopPropagation(); readPathCard(this);" title="Read this card">🔊</button>
                     <a href="/interactive_learning">
-                    <h3>Start Interactive Learning</h3>
-                    <p>Learn through images, diagrams, and visual stories 🎨</p></a>
+                    <h3>Start Interactive Learning.</h3>
+                    <p>Learn through images, diagrams, and visual stories. 🎨</p></a>
                     <div class="progress-bar">
                         <div class="progress" style="width: 60%"></div>
                     </div>
                 </div>
                 <div class="path-card" onclick="window.location.href='/dyslexia_screening'">
                     <button type="button" class="btn btn-purple path-read-btn" style="float:right;padding:0.25rem 0.5rem;font-size:0.85rem;" onclick="event.stopPropagation(); readPathCard(this);" title="Read this card">🔊</button>
-                    <h3>Dyslexia Screening Test</h3>
-                    <p>Take the test to assess reading abilities 📝</p>
+                    <h3>Dyslexia Screening Test.</h3>
+                    <p>Take the test to assess reading abilities. 📝</p>
                     <div class="progress-bar">
                         <div class="progress" style="width: 45%"></div>
                     </div>
                 </div>
                 <div class="path-card" onclick="openEducationalGames()">
                     <button type="button" class="btn btn-purple path-read-btn" style="float:right;padding:0.25rem 0.5rem;font-size:0.85rem;" onclick="event.stopPropagation(); readPathCard(this);" title="Read this card">🔊</button>
-                    <h3>Interactive Games</h3>
-                    <p>Word scramble, math challenge, memory match &amp; more 🎮</p>
+                    <h3>Interactive Games.</h3>
+                    <p>Word scramble, math challenge, memory match &amp; more. 🎮</p>
                     <div class="progress-bar">
                         <div class="progress" style="width: 30%"></div>
                     </div>
@@ -1232,7 +1236,7 @@ function goToInteractiveLearning() {
 
         <section id="progress" class="section progress-section">
             <button onclick="readSection('progress')" class="btn btn-purple" style="float:right; margin-bottom: 1rem;">🔊 Read Aloud</button>
-            <h2><span class="icon">📊</span> Your Progress</h2>
+            <h2><span class="icon">📊</span> Your Progress.</h2>
             <div class="progress-dashboard">
                 <div class="stat-card">
                     <h3>Daily Streak</h3>
@@ -1437,7 +1441,11 @@ function goToInteractiveLearning() {
             }
             const currentSection = this.getCurrentSection();
             if (currentSection) {
-                const text = currentSection.textContent.replace(/\s+/g, ' ').trim();
+                const raw = currentSection.textContent.replace(/\s+/g, ' ').trim();
+                const text = window.NeuroLearnA11y?.sanitizeSpeechText
+                    ? NeuroLearnA11y.sanitizeSpeechText(raw)
+                    : raw;
+                if (!text) return;
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.onend = () => {
                     this.isReading = false;
