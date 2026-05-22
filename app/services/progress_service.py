@@ -1,6 +1,9 @@
+import logging
 from datetime import timedelta
 
 from app.models import ProgressEvent, ScreeningResult, User
+
+logger = logging.getLogger(__name__)
 from app.mongo import get_db, parse_object_id, utcnow
 
 
@@ -17,6 +20,10 @@ def save_screening_result(user_id, overall_score, risk_level, component_scores,
         'overall_score': overall_score,
         'risk_level': risk_level,
     })
+    logger.info(
+        'Screening saved for user %s (score=%s, risk=%s)',
+        user_id, overall_score, risk_level,
+    )
     return ScreeningResult(doc)
 
 
@@ -325,3 +332,144 @@ def parent_owns_child(parent_id, child_id):
         'parent_id': parent_oid,
         'child_id': child_oid,
     }) is not None
+
+
+# --- Achievements (stored as progress_events with event_type "achievement") ---
+
+ACHIEVEMENT_CATALOG = [
+    {
+        'id': 'first_screening',
+        'title': 'Screening Starter',
+        'icon': '📝',
+        'description': 'Completed your first dyslexia screening',
+    },
+    {
+        'id': 'triple_screening',
+        'title': 'Dedicated Learner',
+        'icon': '🔬',
+        'description': 'Completed three dyslexia screenings',
+    },
+    {
+        'id': 'streak_3',
+        'title': 'On a Roll',
+        'icon': '🔥',
+        'description': 'Maintained a 3-day learning streak',
+    },
+    {
+        'id': 'streak_7',
+        'title': 'Week Warrior',
+        'icon': '⭐',
+        'description': 'Maintained a 7-day learning streak',
+    },
+    {
+        'id': 'interactive_start',
+        'title': 'Explorer',
+        'icon': '🎨',
+        'description': 'Started interactive learning',
+    },
+    {
+        'id': 'emotion_learner',
+        'title': 'Feeling Finder',
+        'icon': '😊',
+        'description': 'Practiced emotion detection three times',
+    },
+    {
+        'id': 'finger_whiz',
+        'title': 'Finger Whiz',
+        'icon': '✋',
+        'description': 'Completed finger counting practice five times',
+    },
+    {
+        'id': 'daily_challenge',
+        'title': 'Challenge Champ',
+        'icon': '🏆',
+        'description': 'Finished a daily challenge',
+    },
+]
+
+
+def _get_unlocked_achievements(user_id):
+    """Return map achievement_id -> unlocked_at iso string."""
+    oid = _user_oid(user_id)
+    if not oid:
+        return {}
+    rows = get_db().progress_events.find({
+        'user_id': oid,
+        'event_type': 'achievement',
+    }).sort('created_at', -1)
+    unlocked = {}
+    for row in rows:
+        payload = row.get('payload') or {}
+        aid = payload.get('id')
+        if aid and aid not in unlocked:
+            created = row.get('created_at')
+            unlocked[aid] = created.isoformat() if created else None
+    return unlocked
+
+
+def _achievement_met(achievement_id, summary, event_counts):
+    sc = summary.get('screening_count', 0)
+    streak = summary.get('streak', 0)
+    if achievement_id == 'first_screening':
+        return sc >= 1
+    if achievement_id == 'triple_screening':
+        return sc >= 3
+    if achievement_id == 'streak_3':
+        return streak >= 3
+    if achievement_id == 'streak_7':
+        return streak >= 7
+    if achievement_id == 'interactive_start':
+        return (
+            event_counts.get('module_visit', 0) >= 1
+            or event_counts.get('interactive_emotion', 0) >= 1
+            or event_counts.get('interactive_fingers', 0) >= 1
+            or event_counts.get('interactive_face', 0) >= 1
+        )
+    if achievement_id == 'emotion_learner':
+        return event_counts.get('interactive_emotion', 0) >= 3
+    if achievement_id == 'finger_whiz':
+        return event_counts.get('interactive_fingers', 0) >= 5
+    if achievement_id == 'daily_challenge':
+        return event_counts.get('daily_challenge', 0) >= 1
+    return False
+
+
+def sync_achievements(user_id):
+    """
+    Unlock newly earned achievements and return full catalog + new unlocks.
+    """
+    summary = get_student_summary(user_id)
+    activity = get_activity_stats(user_id)
+    event_counts = activity.get('breakdown', {})
+    already = _get_unlocked_achievements(user_id)
+    newly_unlocked = []
+
+    for item in ACHIEVEMENT_CATALOG:
+        aid = item['id']
+        if aid in already:
+            continue
+        if not _achievement_met(aid, summary, event_counts):
+            continue
+        record_progress_event(user_id, 'achievement', {
+            'id': aid,
+            'title': item['title'],
+            'icon': item['icon'],
+            'description': item.get('description', ''),
+        })
+        unlocked_at = utcnow().isoformat()
+        already[aid] = unlocked_at
+        newly_unlocked.append({
+            **item,
+            'unlocked_at': unlocked_at,
+        })
+
+    catalog = []
+    for item in ACHIEVEMENT_CATALOG:
+        aid = item['id']
+        catalog.append({
+            **item,
+            'unlocked': aid in already,
+            'unlocked_at': already.get(aid),
+        })
+    catalog.sort(key=lambda x: (not x['unlocked'], x.get('unlocked_at') or ''), reverse=True)
+    return catalog, newly_unlocked

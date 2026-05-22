@@ -6,11 +6,26 @@ window.NeuroLearnWav = {
     async blobToWav(blob, targetSampleRate) {
         const rate = targetSampleRate || 16000;
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AudioCtx({ sampleRate: rate });
+        const decodeCtx = new AudioCtx();
         const arrayBuffer = await blob.arrayBuffer();
-        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-        await ctx.close();
-        return new Blob([this._audioBufferToWav(audioBuffer, rate)], { type: 'audio/wav' });
+        let audioBuffer;
+        try {
+            audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer);
+        } finally {
+            await decodeCtx.close();
+        }
+
+        const offline = new OfflineAudioContext(
+            1,
+            Math.max(1, Math.ceil(audioBuffer.duration * rate)),
+            rate,
+        );
+        const source = offline.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(offline.destination);
+        source.start(0);
+        const rendered = await offline.startRendering();
+        return new Blob([this._audioBufferToWav(rendered, rate)], { type: 'audio/wav' });
     },
 
     _audioBufferToWav(buffer, sampleRate) {

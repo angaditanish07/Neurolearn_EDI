@@ -16,10 +16,14 @@ def progress_summary():
             'role': 'parent',
             'children': progress_service.get_parent_children(user_id),
         })
+    summary = progress_service.get_student_summary(user_id)
+    achievements, newly_unlocked = progress_service.sync_achievements(user_id)
     return jsonify({
         'success': True,
         'role': 'student',
-        'summary': progress_service.get_student_summary(user_id),
+        'summary': summary,
+        'achievements': achievements,
+        'new_achievements': newly_unlocked,
     })
 
 
@@ -42,4 +46,8 @@ def progress_event():
     progress_service.record_progress_event(
         session['user_id'], event_type, data.get('payload', data)
     )
-    return jsonify({'success': True})
+    _, newly_unlocked = progress_service.sync_achievements(session['user_id'])
+    return jsonify({
+        'success': True,
+        'new_achievements': newly_unlocked,
+    })

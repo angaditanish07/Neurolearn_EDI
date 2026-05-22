@@ -180,6 +180,67 @@ body.has-dashboard-nav {
     50% { transform: scale(1.06); }
 }
 
+.achievements-empty {
+    color: #64748b;
+    font-size: 0.95rem;
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.achievement-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.achievement-modal[hidden] {
+    display: none !important;
+}
+
+.achievement-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.achievement-modal-card {
+    position: relative;
+    z-index: 1;
+    background: #fff;
+    border-radius: 1rem;
+    padding: 2rem 1.75rem;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    animation: achievement-pop 0.45s ease;
+}
+
+@keyframes achievement-pop {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.achievement-modal-icon {
+    font-size: 3.5rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+}
+
+.achievement-modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #64748b;
+}
+
 .sr-only {
     position: absolute;
     width: 1px;

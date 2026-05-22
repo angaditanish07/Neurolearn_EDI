@@ -4,6 +4,7 @@
     {% include 'includes/head_common.html' %}
     <title>Dyslexia Screening</title>
     <script src="{{ url_for('static', filename='js/media-permissions.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/wav-encoder.js') }}"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.botpress.cloud/webchat/v2.5/inject.js"></script>
@@ -657,8 +658,18 @@
                         const testNumber = testId.split('-')[1];
                         const targetText = document.getElementById(`reading-text-${testNumber}`).innerText.trim();
                         
+                        let uploadBlob = audioBlob;
+                        if (window.NeuroLearnWav) {
+                            status.textContent = 'Preparing audio for analysis...';
+                            try {
+                                uploadBlob = await NeuroLearnWav.blobToWav(audioBlob, 16000);
+                            } catch (convErr) {
+                                console.warn('WAV conversion failed, sending original:', convErr);
+                            }
+                        }
+
                         const formData = new FormData();
-                        formData.append('audio', audioBlob);
+                        formData.append('audio', uploadBlob, 'recording.wav');
                         formData.append('test_id', testId);
                         formData.append('target_text', targetText);
 
@@ -669,46 +680,32 @@
                             method: 'POST',
                             body: formData
                         });
+
+                        const result = await response.json().catch(() => ({}));
                         
                         if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                            throw new Error(result.error || `HTTP error! status: ${response.status}`);
                         }
-                        
-                        const result = await response.json();
                         
                         if (result.success) {
                             // Clean and normalize the texts
                             const recognizedText = result.recognized_text.toLowerCase().trim();
                             const expectedText = targetText.toLowerCase().trim();
                             
+                            const accuracyPct = (Number(result.accuracy) || 0) * 100;
+
                             // Store results in session storage with consistent test ID
                             const readingResults = JSON.parse(sessionStorage.getItem('readingResults') || '{}');
                             readingResults[`reading-${testNumber}`] = {
                                 recognized_text: recognizedText,
                                 target_text: expectedText,
-                                accuracy: result.accuracy
+                                accuracy: Number(result.accuracy) || 0
                             };
                             sessionStorage.setItem('readingResults', JSON.stringify(readingResults));
                             
-                            // Calculate word-based accuracy
-                            const recognizedWords = recognizedText.split(/\s+/);
-                            const expectedWords = expectedText.split(/\s+/);
-                            
-                            let correctWords = 0;
-                            let totalWords = expectedWords.length;
-                            
-                            // Compare each word
-                            expectedWords.forEach((expectedWord, index) => {
-                                if (recognizedWords[index] === expectedWord) {
-                                    correctWords++;
-                                }
-                            });
-                            
-                            const accuracy = (correctWords / totalWords) * 100;
-                            
-                            // Display detailed results
+                            // Display detailed results (accuracy from server — sequence-based, not index-aligned)
                             status.innerHTML = `Recording analyzed successfully!<br>
-                                              Accuracy: ${accuracy.toFixed(1)}%<br>
+                                              Accuracy: ${accuracyPct.toFixed(1)}%<br>
                                               Recognized: "${recognizedText}"<br>
                                               Expected: "${expectedText}"`;
                             status.style.color = '#27ae60';
@@ -717,9 +714,7 @@
                                 testId,
                                 recognizedText,
                                 expectedText,
-                                accuracy,
-                                correctWords,
-                                totalWords
+                                accuracyPct
                             });
                         } else {
                             throw new Error(result.error || 'Analysis failed');
@@ -1102,16 +1097,21 @@
             console.log('SHAP Data:', result.result?.shap_explanation);
             
             if (result.success) {
-                // Clear loading message
                 errorDiv.textContent = '';
-                
-                // Display results
+
                 displayResults(result.result);
-                
-                // Show confetti animation
                 createConfetti();
-                
-                // Scroll to results
+
+                if (result.new_achievements && result.new_achievements.length) {
+                    sessionStorage.setItem(
+                        'nl_pending_achievements',
+                        JSON.stringify(result.new_achievements)
+                    );
+                    if (window.NeuroLearnAchievements) {
+                        NeuroLearnAchievements.showQueue(result.new_achievements);
+                    }
+                }
+
                 resultsDiv.scrollIntoView({ behavior: 'smooth' });
             } else {
                 errorDiv.textContent = result.error || 'Error submitting test results.';
@@ -1324,6 +1324,7 @@
     });
     </script>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/achievements.js') }}"></script>
     {% include 'includes/nav_scripts.html' %}
 </body>
 </html> 

@@ -1,7 +1,9 @@
 import json
 import logging
 import os
+import re
 from datetime import datetime
+from difflib import SequenceMatcher
 
 import numpy as np
 
@@ -11,19 +13,23 @@ from app.ml.schemas import FEATURE_ORDER, ML_CLASS_TO_APP_RISK
 logger = logging.getLogger(__name__)
 
 
+def _words_from_text(text):
+    """Lowercase word tokens with punctuation stripped."""
+    return re.findall(r"[a-z0-9']+", (text or '').lower())
+
+
 def calculate_accuracy(recognized_text, target_text):
-    if not recognized_text or not target_text:
+    """
+    Word-sequence similarity (0–1). Uses sequence alignment so missing
+    words at the start/end (common in speech recognition) do not zero out the score.
+    """
+    recognized_words = _words_from_text(recognized_text)
+    target_words = _words_from_text(target_text)
+    if not target_words:
         return 0.0
-    recognized_words = recognized_text.lower().split()
-    target_words = target_text.lower().split()
-    target_copy = list(target_words)
-    matches = 0
-    for word in recognized_words:
-        if word in target_copy:
-            matches += 1
-            target_copy.remove(word)
-    denominator = max(len(recognized_words), len(target_words))
-    return matches / denominator if denominator else 0.0
+    if not recognized_words:
+        return 0.0
+    return float(SequenceMatcher(None, recognized_words, target_words).ratio())
 
 
 def _scores_from_component(test_data, component_key):
@@ -269,7 +275,7 @@ def save_test_results(test_data, features, risk_level, confidence_scores, overal
             save_screening_result(
                 user_id,
                 overall_result.get('score', 0.5),
-                risk_level,
+                int(risk_level),
                 cs,
                 recs,
                 feature_importance or {},
@@ -347,11 +353,15 @@ def submit_simple(test_data, user_id=None):
     recommendations = generate_recommendations(
         component_scores, overall_score, risk_level
     )
+    new_achievements = []
     if user_id:
-        save_test_results(
+        if not save_test_results(
             test_data, {}, risk_level, {}, {'score': overall_score, 'risk_level': risk_level},
             user_id=user_id, component_scores=component_scores, recommendations=recommendations,
-        )
+        ):
+            return {'success': False, 'error': 'Failed to save screening results to database'}, 500
+        from app.services.progress_service import sync_achievements
+        _, new_achievements = sync_achievements(user_id)
     return {
         'success': True,
         'result': {
@@ -360,6 +370,7 @@ def submit_simple(test_data, user_id=None):
             'component_scores': component_scores,
             'recommendations': recommendations,
         },
+        'new_achievements': new_achievements,
     }, 200
 
 
@@ -388,11 +399,17 @@ def submit_full(test_data, model_path, user_id=None):
     recommendations = generate_recommendations(
         component_scores, overall_score, risk_level
     )
-    save_test_results(
+    if not save_test_results(
         test_data, features, risk_level, confidence_scores, overall_result,
         user_id=user_id, component_scores=component_scores,
         recommendations=recommendations, feature_importance=feature_importance,
-    )
+    ):
+        return {'success': False, 'error': 'Failed to save screening results to database'}, 500
+
+    new_achievements = []
+    if user_id:
+        from app.services.progress_service import sync_achievements
+        _, new_achievements = sync_achievements(user_id)
 
     return {
         'success': True,
@@ -407,4 +424,5 @@ def submit_full(test_data, model_path, user_id=None):
             'ml_probabilities': proba,
             'recommendations': recommendations,
         },
+        'new_achievements': new_achievements,
     }, 200

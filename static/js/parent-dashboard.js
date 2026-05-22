@@ -93,24 +93,24 @@ async function loadChildren(silent) {
     }).join('');
 
     el.querySelectorAll('.child-card').forEach((card) => {
-        card.onclick = () => selectChild(parseInt(card.dataset.id, 10));
+        card.onclick = () => selectChild(card.dataset.id);
     });
 
     if (!silent && data.children.length === 1) {
-        selectChild(data.children[0].id);
+        selectChild(String(data.children[0].id));
     } else if (selectedChildId) {
-        const still = data.children.find((c) => c.id === selectedChildId);
-        if (still) selectChild(selectedChildId, true);
+        const still = data.children.find((c) => String(c.id) === String(selectedChildId));
+        if (still) selectChild(String(selectedChildId), true);
     }
 }
 
 async function selectChild(childId, silent) {
-    selectedChildId = childId;
+    selectedChildId = String(childId);
     document.querySelectorAll('.child-card').forEach((c) => {
-        c.classList.toggle('active', parseInt(c.dataset.id, 10) === childId);
+        c.classList.toggle('active', c.dataset.id === selectedChildId);
     });
 
-    const res = await fetch(`/api/parent/child/${childId}/summary`);
+    const res = await fetch(`/api/parent/child/${encodeURIComponent(selectedChildId)}/summary`);
     const data = await res.json();
     if (!data.success) return;
 

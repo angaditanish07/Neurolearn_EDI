@@ -138,6 +138,11 @@ def analyze_reading():
                 'success': False,
                 'error': 'Could not understand audio. Please speak clearly and try again.',
             }), 200
+        if err_name in ('RequestError', 'URLError'):
+            return jsonify({
+                'success': False,
+                'error': 'Speech recognition service unavailable. Check your internet connection and try again.',
+            }), 503
         if current_app.debug:
             return jsonify({'success': False, 'error': str(e)}), 500
         return jsonify({'success': False, 'error': 'Reading analysis failed'}), 500

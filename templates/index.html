@@ -863,12 +863,16 @@ function readPathCard(btn) {
     }
 }
 async function markChallengeDone() {
-    await fetch('/api/progress/event', {
+    const res = await fetch('/api/progress/event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event_type: 'daily_challenge', payload: { completed: true } }),
     });
+    const data = await res.json().catch(() => ({}));
     announceChange('Great job! Daily challenge completed!');
+    if (data.new_achievements && data.new_achievements.length && window.NeuroLearnAchievements) {
+        NeuroLearnAchievements.showQueue(data.new_achievements);
+    }
     if (typeof loadUserProgress === 'function') loadUserProgress();
 }
 function startFaceDetection() {
@@ -1212,23 +1216,23 @@ function goToInteractiveLearning() {
                     <h3>Start Interactive Learning.</h3>
                     <p>Learn through images, diagrams, and visual stories. 🎨</p></a>
                     <div class="progress-bar">
-                        <div class="progress" style="width: 60%"></div>
+                        <div class="progress" data-path="interactive" style="width: 0%"></div>
                     </div>
                 </div>
                 <div class="path-card" onclick="window.location.href='/dyslexia_screening'">
                     <button type="button" class="btn btn-purple path-read-btn" style="float:right;padding:0.25rem 0.5rem;font-size:0.85rem;" onclick="event.stopPropagation(); readPathCard(this);" title="Read this card">🔊</button>
                     <h3>Dyslexia Screening Test.</h3>
-                    <p>Take the test to assess reading abilities. 📝</p>
+                    <p id="screeningPathDesc">Take the test to assess reading abilities.</p>
                     <div class="progress-bar">
-                        <div class="progress" style="width: 45%"></div>
+                        <div class="progress" data-path="dyslexia" style="width: 0%"></div>
                     </div>
                 </div>
                 <div class="path-card" onclick="openEducationalGames()">
                     <button type="button" class="btn btn-purple path-read-btn" style="float:right;padding:0.25rem 0.5rem;font-size:0.85rem;" onclick="event.stopPropagation(); readPathCard(this);" title="Read this card">🔊</button>
                     <h3>Interactive Games.</h3>
-                    <p>Word scramble, math challenge, memory match &amp; more. 🎮</p>
+                    <p>Word scramble, math challenge, memory match &amp; more.</p>
                     <div class="progress-bar">
-                        <div class="progress" style="width: 30%"></div>
+                        <div class="progress" data-path="games" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
@@ -1259,19 +1263,8 @@ function goToInteractiveLearning() {
             </div>
             <div class="achievement-gallery">
                 <h3>Recent Achievements</h3>
-                <div class="achievements-grid">
-                    <div class="achievement">
-                        <span class="achievement-icon">🏆</span>
-                        <p>Math Master</p>
-                    </div>
-                    <div class="achievement">
-                        <span class="achievement-icon">🎨</span>
-                        <p>Creative Writer</p>
-                    </div>
-                    <div class="achievement">
-                        <span class="achievement-icon">🔬</span>
-                        <p>Science Explorer</p>
-                    </div>
+                <div class="achievements-grid" id="achievementsGrid">
+                    <p class="achievements-empty">Loading achievements…</p>
                 </div>
             </div>
         </section>
@@ -1310,6 +1303,7 @@ function goToInteractiveLearning() {
         </div>
     </footer>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/achievements.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app-home.js') }}"></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     {% include 'includes/nav_scripts.html' %}
